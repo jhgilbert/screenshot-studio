@@ -11,7 +11,7 @@ const manifest: chrome.runtime.ManifestV3 = {
   permissions: ["storage", "sidePanel"],
   options_page: "src/pages/options/index.html",
   side_panel: {
-    default_path: "src/pages/panel/index.html",
+    default_path: "src/pages/sidePanel/index.html",
   },
   background: {
     service_worker: "src/pages/background/index.js",
