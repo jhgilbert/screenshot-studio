@@ -1,7 +1,7 @@
 {
-  "name": "chrome-extension-boilerplate-react-vite",
-  "version": "0.0.1",
-  "description": "chrome extension boilerplate",
+  "name": "screenshot-studio",
+  "version": "0.1.0",
+  "description": "A toolkit for taking prettier screenshots in Chrome",
   "license": "MIT",
   "repository": {
     "type": "git",
