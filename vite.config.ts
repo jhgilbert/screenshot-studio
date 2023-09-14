@@ -41,7 +41,7 @@ export default defineConfig({
   ],
   publicDir,
   build: {
-    target: 'esnext',
+    target: "esnext",
     outDir,
     /** Can slowDown build speed. */
     // sourcemap: isDev,
@@ -51,6 +51,7 @@ export default defineConfig({
       input: {
         devtools: resolve(pagesDir, "devtools", "index.html"),
         panel: resolve(pagesDir, "panel", "index.html"),
+        sidePanel: resolve(pagesDir, "sidePanel", "index.html"),
         content: resolve(pagesDir, "content", "index.ts"),
         background: resolve(pagesDir, "background", "index.ts"),
         contentStyle: resolve(pagesDir, "content", "style.scss"),
