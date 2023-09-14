@@ -8,14 +8,18 @@ const manifest: chrome.runtime.ManifestV3 = {
   name: packageJson.name,
   version: packageJson.version,
   description: packageJson.description,
-  permissions: ["storage"],
+  permissions: ["storage", "sidePanel"],
   options_page: "src/pages/options/index.html",
+  side_panel: {
+    default_path: "src/pages/panel/index.html",
+  },
   background: {
     service_worker: "src/pages/background/index.js",
     type: "module",
   },
   action: {
-    default_popup: "src/pages/popup/index.html",
+    // default_popup: "src/pages/popup/index.html",
+    default_title: "Click to open panel",
     default_icon: "icon-34.png",
   },
   chrome_url_overrides: {

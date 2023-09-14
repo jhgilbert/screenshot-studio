@@ -8,4 +8,6 @@ reloadOnUpdate("pages/background");
  */
 reloadOnUpdate("pages/content/style.scss");
 
-console.log("background loaded");
+chrome.sidePanel
+  .setPanelBehavior({ openPanelOnActionClick: true })
+  .then(() => console.log("background loaded"));

@@ -41,6 +41,7 @@ export default defineConfig({
   ],
   publicDir,
   build: {
+    target: 'esnext',
     outDir,
     /** Can slowDown build speed. */
     // sourcemap: isDev,
