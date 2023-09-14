@@ -43,4 +43,4 @@ document.addEventListener("click", function (e: PointerEvent) {
  * @description
  * Chrome extensions don't support modules in content scripts.
  */
-import("./components/Demo");
+// import("./components/Demo");
