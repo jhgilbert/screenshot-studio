@@ -14,7 +14,26 @@ const sendMessage = async (message: { type: string; payload?: any }) => {
 const SelectionMenu: React.FC = () => {
   return (
     <div>
-      {" "}
+      <Button
+        sx={{ width: "100%", marginBottom: "3px" }}
+        variant="outlined"
+        onClick={() => {
+          sendMessage({ type: "select-parent" });
+        }}
+      >
+        Select parent
+      </Button>
+      <Button
+        sx={{ width: "100%", marginBottom: "3px" }}
+        variant="outlined"
+        onClick={() => {
+          sendMessage({ type: "select-none" });
+        }}
+      >
+        Select none
+      </Button>
+      <br />
+      <br />
       <Button
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
@@ -103,29 +122,13 @@ const SidePanel: React.FC = () => {
       >
         Obscure PII on page
       </Button>
-      <br />
-      <br />
-      <Button
-        sx={{ width: "100%", marginBottom: "3px" }}
-        variant="outlined"
-        onClick={() => {
-          sendMessage({ type: "select-parent" });
-        }}
-      >
-        Select parent
-      </Button>
-      <Button
-        sx={{ width: "100%", marginBottom: "3px" }}
-        variant="outlined"
-        onClick={() => {
-          sendMessage({ type: "select-none" });
-        }}
-      >
-        Select none
-      </Button>
-      <br />
-      <br />
-      {selectionIsActive && <SelectionMenu />}
+      {selectionIsActive && (
+        <>
+          <br />
+          <br />
+          <SelectionMenu />
+        </>
+      )}
     </div>
   );
 };
