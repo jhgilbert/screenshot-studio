@@ -5,7 +5,7 @@ let selectedNode: HTMLElement | null = null;
 function selectNode(node: HTMLElement) {
   deselectNode(selectedNode);
   selectedNode = node;
-  node.style.outline = "2px solid hotpink";
+  node.style.outline = "2px dotted hotpink";
 }
 
 chrome.runtime.onMessage.addListener(function (
@@ -28,7 +28,7 @@ function deselectNode(node: HTMLElement | null) {
 }
 
 document.addEventListener("click", function (e: PointerEvent) {
-  // e.preventDefault();
+  e.preventDefault();
   const target = e.target as HTMLElement;
   selectNode(target);
   chrome.runtime.sendMessage("document-clicked", function (response) {

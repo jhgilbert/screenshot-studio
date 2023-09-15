@@ -1,45 +1,120 @@
-import React from "react";
+import React, { useState } from "react";
 import "@pages/panel/Panel.css";
+import Switch from "@mui/material/Switch";
+import Button from "@mui/material/Button";
 
-const blurSelected = async () => {
-  console.log("Sending blurSelected message");
+const sendMessage = async (message: { type: string; payload?: any }) => {
   const [tab] = await chrome.tabs.query({
     active: true,
     lastFocusedWindow: true,
   });
-  await chrome.tabs.sendMessage(tab.id, { type: "blur-selected" });
+  await chrome.tabs.sendMessage(tab.id, message);
 };
 
-const selectParent = async () => {
-  const [tab] = await chrome.tabs.query({
-    active: true,
-    lastFocusedWindow: true,
-  });
-  await chrome.tabs.sendMessage(tab.id, { type: "select-parent" });
+const SelectionMenu: React.FC = () => {
+  return (
+    <div>
+      {" "}
+      <Button
+        sx={{ width: "100%", marginBottom: "3px" }}
+        variant="outlined"
+        onClick={() => {
+          sendMessage({ type: "blur-selected" });
+        }}
+      >
+        Blur selected
+      </Button>
+      <Button
+        sx={{ width: "100%", marginBottom: "3px" }}
+        variant="outlined"
+        onClick={() => {
+          sendMessage({ type: "delete-selected" });
+        }}
+      >
+        Delete selected
+      </Button>
+      <Button
+        sx={{ width: "100%", marginBottom: "3px" }}
+        variant="outlined"
+        onClick={() => {
+          sendMessage({ type: "hide-selected" });
+        }}
+      >
+        Hide selected
+      </Button>
+      <Button
+        sx={{ width: "100%", marginBottom: "3px" }}
+        variant="outlined"
+        onClick={() => {
+          sendMessage({ type: "label-selected" });
+        }}
+      >
+        Label selected
+      </Button>
+      <Button
+        sx={{ width: "100%", marginBottom: "3px" }}
+        variant="outlined"
+        onClick={() => {
+          sendMessage({ type: "showcase-selected" });
+        }}
+      >
+        Showcase selected
+      </Button>
+    </div>
+  );
 };
 
 const SidePanel: React.FC = () => {
+  const [userIsEditing, setUserIsEditing] = useState(false);
+  const [selectionIsActive, setSelectionIsActive] = useState(false);
+
   return (
     <div>
-      <p>4</p>
-      <button onClick={blurSelected}>Blur selected</button>
-      <button onClick={selectParent}>Select parent</button>
-      <hr />
-      <div>"Edit mode" toggle.</div>
-      <div>Page menu</div>
-      <ul>
-        <li>Obscure PII</li>
-      </ul>
-      <div>Select menu:</div>
-      <ul>
-        <li>Select none</li>
-        <li>Select parent</li>
-      </ul>
-      <div>Selected item menu:</div>
-      <ul>
-        <li>Blur button</li>
-        <li>Reset</li>
-      </ul>
+      <div>
+        <Switch
+          checked={userIsEditing}
+          onChange={(event) => {
+            setUserIsEditing(event.target.checked);
+            sendMessage({
+              type: "set-user-is-editing",
+              payload: event.target.checked,
+            });
+          }}
+          inputProps={{ "aria-label": "controlled" }}
+        />{" "}
+      </div>
+      <Button
+        sx={{ width: "100%", marginBottom: "3px" }}
+        variant="outlined"
+        onClick={() => {
+          sendMessage({ type: "obscure-pii" });
+        }}
+      >
+        Obscure PII on page
+      </Button>
+      <br />
+      <br />
+      <Button
+        sx={{ width: "100%", marginBottom: "3px" }}
+        variant="outlined"
+        onClick={() => {
+          sendMessage({ type: "select-parent" });
+        }}
+      >
+        Select parent
+      </Button>
+      <Button
+        sx={{ width: "100%", marginBottom: "3px" }}
+        variant="outlined"
+        onClick={() => {
+          sendMessage({ type: "select-none" });
+        }}
+      >
+        Select none
+      </Button>
+      <br />
+      <br />
+      <SelectionMenu />
     </div>
   );
 };
