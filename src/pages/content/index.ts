@@ -6,6 +6,7 @@ function selectNode(node: HTMLElement) {
   deselectNode(selectedNode);
   selectedNode = node;
   node.style.outline = "2px dotted hotpink";
+  chrome.runtime.sendMessage({ type: "item-is-selected", payload: true });
 }
 
 chrome.runtime.onMessage.addListener(function (
@@ -25,6 +26,7 @@ chrome.runtime.onMessage.addListener(function (
 function deselectNode(node: HTMLElement | null) {
   if (!node) return;
   node.style.outline = "";
+  chrome.runtime.sendMessage({ type: "item-is-selected", payload: false });
 }
 
 document.addEventListener("click", function (e: PointerEvent) {

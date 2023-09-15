@@ -68,6 +68,17 @@ const SidePanel: React.FC = () => {
   const [userIsEditing, setUserIsEditing] = useState(false);
   const [selectionIsActive, setSelectionIsActive] = useState(false);
 
+  chrome.runtime.onMessage.addListener(function (
+    message: { type: string; payload?: any },
+    sender,
+    sendResponse
+  ) {
+    if (message.type === "item-is-selected") {
+      setSelectionIsActive(message.payload);
+    }
+    sendResponse("ack");
+  });
+
   return (
     <div>
       <div>
@@ -114,7 +125,7 @@ const SidePanel: React.FC = () => {
       </Button>
       <br />
       <br />
-      <SelectionMenu />
+      {selectionIsActive && <SelectionMenu />}
     </div>
   );
 };
