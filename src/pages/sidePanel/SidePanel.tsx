@@ -11,10 +11,15 @@ const sendMessage = async (message: { type: string; payload?: any }) => {
   await chrome.tabs.sendMessage(tab.id, message);
 };
 
-const SelectionMenu: React.FC = () => {
+const SelectionMenu = ({
+  extensionIsActive,
+}: {
+  extensionIsActive: boolean;
+}) => {
   return (
     <div>
       <Button
+        disabled={!extensionIsActive}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
@@ -24,6 +29,7 @@ const SelectionMenu: React.FC = () => {
         Select parent
       </Button>
       <Button
+        disabled={!extensionIsActive}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
@@ -35,6 +41,7 @@ const SelectionMenu: React.FC = () => {
       <br />
       <br />
       <Button
+        disabled={!extensionIsActive}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
@@ -44,6 +51,7 @@ const SelectionMenu: React.FC = () => {
         Blur selected
       </Button>
       <Button
+        disabled={!extensionIsActive}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
@@ -53,6 +61,7 @@ const SelectionMenu: React.FC = () => {
         Delete selected
       </Button>
       <Button
+        disabled={!extensionIsActive}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
@@ -62,6 +71,7 @@ const SelectionMenu: React.FC = () => {
         Hide selected
       </Button>
       <Button
+        disabled={!extensionIsActive}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
@@ -71,6 +81,7 @@ const SelectionMenu: React.FC = () => {
         Label selected
       </Button>
       <Button
+        disabled={!extensionIsActive}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
@@ -84,15 +95,16 @@ const SelectionMenu: React.FC = () => {
 };
 
 const SidePanel: React.FC = () => {
-  const [userIsEditing, setUserIsEditing] = useState(false);
   const [selectionIsActive, setSelectionIsActive] = useState(false);
+  const [extensionIsActive, setExtensionIsActive] = useState(false);
 
   chrome.runtime.onMessage.addListener(function (
     message: { type: string; payload?: any },
     sender,
     sendResponse
   ) {
-    if (message.type === "item-is-selected") {
+    if (message.type === "set-item-is-selected") {
+      console.log("set-item-is-selected", message.payload);
       setSelectionIsActive(message.payload);
     }
     sendResponse("ack");
@@ -102,11 +114,11 @@ const SidePanel: React.FC = () => {
     <div>
       <div>
         <Switch
-          checked={userIsEditing}
+          checked={extensionIsActive}
           onChange={(event) => {
-            setUserIsEditing(event.target.checked);
+            setExtensionIsActive(event.target.checked);
             sendMessage({
-              type: "set-user-is-editing",
+              type: "set-extension-is-active",
               payload: event.target.checked,
             });
           }}
@@ -114,6 +126,7 @@ const SidePanel: React.FC = () => {
         />{" "}
       </div>
       <Button
+        disabled={!extensionIsActive}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
@@ -126,7 +139,7 @@ const SidePanel: React.FC = () => {
         <>
           <br />
           <br />
-          <SelectionMenu />
+          <SelectionMenu extensionIsActive={extensionIsActive} />
         </>
       )}
     </div>

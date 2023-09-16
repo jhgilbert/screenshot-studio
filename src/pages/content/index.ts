@@ -1,12 +1,19 @@
 console.log("content loaded");
 
 let selectedNode: HTMLElement | null = null;
+let extensionIsActive: boolean = false;
 
 function selectNode(node: HTMLElement) {
   deselectNode(selectedNode);
   selectedNode = node;
   node.style.outline = "2px dotted hotpink";
-  chrome.runtime.sendMessage({ type: "item-is-selected", payload: true });
+  chrome.runtime.sendMessage({ type: "set-item-is-selected", payload: true });
+}
+
+function deselectNode(node: HTMLElement | null) {
+  if (!node) return;
+  node.style.outline = "";
+  chrome.runtime.sendMessage({ type: "set-item-is-selected", payload: false });
 }
 
 function temporarilyHighlightObscuredPii() {
@@ -15,11 +22,11 @@ function temporarilyHighlightObscuredPii() {
   );
   if (obscuredPii) {
     for (let i = 0; i < obscuredPii.length; i++) {
-      const element = obscuredPii[i];
+      const element = obscuredPii[i] as HTMLElement;
       element.style.backgroundColor = "yellow";
       setTimeout(() => {
         element.style.backgroundColor = "";
-      }, 2000);
+      }, 5000);
     }
   }
 }
@@ -50,31 +57,31 @@ function obscureEmailAddressesOnPage() {
   }
 }
 
+function obscurePii() {
+  obscureIpAddressesOnPage();
+  obscureEmailAddressesOnPage();
+  temporarilyHighlightObscuredPii();
+}
+
 chrome.runtime.onMessage.addListener(function (
-  message: { type: string },
+  message: { type: string; payload?: any },
   sender,
   sendResponse
 ) {
   if (message.type === "select-parent") {
     selectNode(selectedNode?.parentElement!);
   } else if (message.type === "blur-selected" && selectedNode) {
-    console.log("blurSelected message received");
     selectedNode.style.filter = "blur(5px)";
   } else if (message.type === "obscure-pii") {
-    obscureIpAddressesOnPage();
-    obscureEmailAddressesOnPage();
-    temporarilyHighlightObscuredPii();
+    obscurePii();
+  } else if (message.type === "set-extension-is-active") {
+    extensionIsActive = message.payload;
   }
   sendResponse("ack");
 });
 
-function deselectNode(node: HTMLElement | null) {
-  if (!node) return;
-  node.style.outline = "";
-  chrome.runtime.sendMessage({ type: "item-is-selected", payload: false });
-}
-
 document.addEventListener("click", function (e: PointerEvent) {
+  if (!extensionIsActive) return;
   e.preventDefault();
   const target = e.target as HTMLElement;
   selectNode(target);
