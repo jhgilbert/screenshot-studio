@@ -6,14 +6,18 @@ let extensionIsActive: boolean = false;
 function selectNode(node: HTMLElement) {
   deselectNode(selectedNode);
   selectedNode = node;
+  console.log("selectedNode is ", selectedNode);
   node.style.outline = "2px dotted hotpink";
-  chrome.runtime.sendMessage({ type: "set-item-is-selected", payload: true });
+  chrome.runtime.sendMessage({
+    type: "set-selected-node",
+    payload: selectedNode,
+  });
 }
 
 function deselectNode(node: HTMLElement | null) {
   if (!node) return;
   node.style.outline = "";
-  chrome.runtime.sendMessage({ type: "set-item-is-selected", payload: false });
+  chrome.runtime.sendMessage({ type: "set-selected-node", payload: null });
 }
 
 function temporarilyHighlightObscuredPii() {

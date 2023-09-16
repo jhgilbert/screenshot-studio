@@ -95,7 +95,7 @@ const SelectionMenu = ({
 };
 
 const SidePanel: React.FC = () => {
-  const [selectionIsActive, setSelectionIsActive] = useState(false);
+  const [selectedNode, setSelectedNode] = useState(null);
   const [extensionIsActive, setExtensionIsActive] = useState(false);
 
   chrome.runtime.onMessage.addListener(function (
@@ -103,9 +103,8 @@ const SidePanel: React.FC = () => {
     sender,
     sendResponse
   ) {
-    if (message.type === "set-item-is-selected") {
-      console.log("set-item-is-selected", message.payload);
-      setSelectionIsActive(message.payload);
+    if (message.type === "set-selected-node") {
+      setSelectedNode(message.payload);
     }
     sendResponse("ack");
   });
@@ -135,7 +134,7 @@ const SidePanel: React.FC = () => {
       >
         Obscure PII on page
       </Button>
-      {selectionIsActive && (
+      {selectedNode && (
         <>
           <br />
           <br />
