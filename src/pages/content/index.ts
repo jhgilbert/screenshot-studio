@@ -63,6 +63,49 @@ function obscurePii() {
   temporarilyHighlightObscuredPii();
 }
 
+function getElementSiblings(element: HTMLElement) {
+  const siblings = [];
+  let sibling = element.parentNode?.firstChild as HTMLElement;
+  while (sibling) {
+    if (sibling.nodeType === 1 && sibling !== element) {
+      siblings.push(sibling);
+    }
+    sibling = sibling.nextSibling as HTMLElement;
+  }
+  return siblings;
+}
+
+function getElementAncestors(element: HTMLElement) {
+  const ancestors = [];
+  let ancestor = element.parentNode as HTMLElement;
+  while (ancestor) {
+    if (ancestor.nodeType === 1) {
+      ancestors.push(ancestor);
+    }
+    ancestor = ancestor.parentNode as HTMLElement;
+  }
+  return ancestors;
+}
+
+function showcaseSelected() {
+  if (!selectedNode) return;
+  const ancestors = getElementAncestors(selectedNode);
+
+  // get the siblings of the selected element
+  let siblings: HTMLElement[] = [];
+  siblings = getElementSiblings(selectedNode);
+
+  // get the siblings of all ancestors
+  ancestors.forEach((ancestor) => {
+    siblings = siblings.concat(getElementSiblings(ancestor));
+  });
+
+  for (let i = 0; i < siblings.length; i++) {
+    const sibling = siblings[i] as HTMLElement;
+    sibling.style.opacity = "0.3";
+  }
+}
+
 chrome.runtime.onMessage.addListener(function (
   message: { type: string; payload?: any },
   sender,
@@ -72,6 +115,12 @@ chrome.runtime.onMessage.addListener(function (
     selectNode(selectedNode?.parentElement!);
   } else if (message.type === "blur-selected" && selectedNode) {
     selectedNode.style.filter = "blur(5px)";
+  } else if (message.type === "delete-selected" && selectedNode) {
+    selectedNode.style.display = "none";
+  } else if (message.type === "hide-selected" && selectedNode) {
+    selectedNode.style.visibility = "hidden";
+  } else if (message.type === "showcase-selected" && selectedNode) {
+    showcaseSelected();
   } else if (message.type === "obscure-pii") {
     obscurePii();
   } else if (message.type === "set-extension-is-active") {
