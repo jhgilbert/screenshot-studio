@@ -123,6 +123,8 @@ chrome.runtime.onMessage.addListener(function (
     showcaseSelected();
   } else if (message.type === "obscure-pii") {
     obscurePii();
+  } else if (message.type === "select-none") {
+    deselectNode(selectedNode);
   } else if (message.type === "set-extension-is-active") {
     extensionIsActive = message.payload;
   }
