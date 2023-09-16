@@ -6,7 +6,6 @@ let extensionIsActive: boolean = false;
 function selectNode(node: HTMLElement) {
   deselectNode(selectedNode);
   selectedNode = node;
-  console.log("selectedNode is ", selectedNode);
   node.style.outline = "2px dotted hotpink";
   chrome.runtime.sendMessage({
     type: "set-selected-node-attrs",
@@ -139,6 +138,9 @@ chrome.runtime.onMessage.addListener(function (
     if (!extensionIsActive) {
       deselectNode(selectedNode);
     }
+  } else if (message.type === "edit-selected-inner-text") {
+    if (!selectedNode) return;
+    selectedNode.innerText = message.payload;
   }
   sendResponse("ack");
 });

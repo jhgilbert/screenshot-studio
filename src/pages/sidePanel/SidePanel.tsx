@@ -11,16 +11,41 @@ const sendMessage = async (message: { type: string; payload?: any }) => {
   await chrome.tabs.sendMessage(tab.id, message);
 };
 
+const PageTextEditor = ({
+  text,
+  editCallback,
+}: {
+  text: string;
+  editCallback: (newText: string) => void;
+}) => {
+  console.log("re-rendering page text editor, text is", text);
+  const style = {
+    width: "100%",
+    padding: "5px",
+  };
+  // const [value, setValue] = useState(text);
+  const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    // setValue(event.target.value);
+    editCallback(event.target.value);
+  };
+  return <textarea style={style} defaultValue={text} onChange={handleChange} />;
+};
+
 const SelectionMenu = ({
   extensionIsActive,
-  selectedNodeAttrs,
+  selectedNodeText,
 }: {
   extensionIsActive: boolean;
-  selectedNodeAttrs: Record<string, any>;
+  selectedNodeText: string;
 }) => {
   return (
     <div>
-      <div>{JSON.stringify(selectedNodeAttrs)}</div>
+      <PageTextEditor
+        text={selectedNodeText}
+        editCallback={(newText) => {
+          sendMessage({ type: "edit-selected-inner-text", payload: newText });
+        }}
+      />
       <Button
         disabled={!extensionIsActive}
         sx={{ width: "100%", marginBottom: "3px" }}
@@ -98,18 +123,24 @@ const SelectionMenu = ({
 };
 
 const SidePanel: React.FC = () => {
-  const [selectedNodeAttrs, setSelectedNodeAttrs] = useState(null);
+  const [selectedNodeText, setSelectedNodeText] = useState(null);
+  const [nodeIsSelected, setNodeIsSelected] = useState(false);
   const [extensionIsActive, setExtensionIsActive] = useState(false);
 
-  chrome.runtime.onMessage.addListener(function (
-    message: { type: string; payload?: any },
-    sender,
-    sendResponse
-  ) {
+  chrome.runtime.onMessage.addListener(function (message: {
+    type: string;
+    payload?: any;
+  }) {
     if (message.type === "set-selected-node-attrs") {
-      setSelectedNodeAttrs(message.payload);
+      console.log("set-selected-node-attrs", message.payload);
+      if (message.payload !== null) {
+        setSelectedNodeText(message.payload.innerText);
+        setNodeIsSelected(true);
+      } else {
+        setSelectedNodeText(null);
+        setNodeIsSelected(false);
+      }
     }
-    sendResponse("ack");
   });
 
   return (
@@ -137,13 +168,13 @@ const SidePanel: React.FC = () => {
       >
         Obscure PII on page
       </Button>
-      {selectedNodeAttrs && (
+      {nodeIsSelected && (
         <>
           <br />
           <br />
           <SelectionMenu
             extensionIsActive={extensionIsActive}
-            selectedNodeAttrs={selectedNodeAttrs}
+            selectedNodeText={selectedNodeText}
           />
         </>
       )}
