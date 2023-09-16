@@ -9,15 +9,20 @@ function selectNode(node: HTMLElement) {
   console.log("selectedNode is ", selectedNode);
   node.style.outline = "2px dotted hotpink";
   chrome.runtime.sendMessage({
-    type: "set-selected-node",
-    payload: selectedNode,
+    type: "set-selected-node-attrs",
+    payload: {
+      innerText: selectedNode.innerText,
+    },
   });
 }
 
 function deselectNode(node: HTMLElement | null) {
   if (!node) return;
   node.style.outline = "";
-  chrome.runtime.sendMessage({ type: "set-selected-node", payload: null });
+  chrome.runtime.sendMessage({
+    type: "set-selected-node-attrs",
+    payload: null,
+  });
 }
 
 function temporarilyHighlightObscuredPii() {
@@ -131,6 +136,9 @@ chrome.runtime.onMessage.addListener(function (
     deselectNode(selectedNode);
   } else if (message.type === "set-extension-is-active") {
     extensionIsActive = message.payload;
+    if (!extensionIsActive) {
+      deselectNode(selectedNode);
+    }
   }
   sendResponse("ack");
 });
@@ -140,12 +148,6 @@ document.addEventListener("click", function (e: PointerEvent) {
   e.preventDefault();
   const target = e.target as HTMLElement;
   selectNode(target);
-  chrome.runtime.sendMessage("document-clicked", function (response) {
-    console.log("event is ", e);
-    console.log("selectedNode is ", selectedNode);
-    console.log("document clicked");
-    console.log("response is ", response);
-  });
 });
 
 /**

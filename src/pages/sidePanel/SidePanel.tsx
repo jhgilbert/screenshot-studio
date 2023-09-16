@@ -13,11 +13,14 @@ const sendMessage = async (message: { type: string; payload?: any }) => {
 
 const SelectionMenu = ({
   extensionIsActive,
+  selectedNodeAttrs,
 }: {
   extensionIsActive: boolean;
+  selectedNodeAttrs: Record<string, any>;
 }) => {
   return (
     <div>
+      <div>{JSON.stringify(selectedNodeAttrs)}</div>
       <Button
         disabled={!extensionIsActive}
         sx={{ width: "100%", marginBottom: "3px" }}
@@ -95,7 +98,7 @@ const SelectionMenu = ({
 };
 
 const SidePanel: React.FC = () => {
-  const [selectedNode, setSelectedNode] = useState(null);
+  const [selectedNodeAttrs, setSelectedNodeAttrs] = useState(null);
   const [extensionIsActive, setExtensionIsActive] = useState(false);
 
   chrome.runtime.onMessage.addListener(function (
@@ -103,8 +106,8 @@ const SidePanel: React.FC = () => {
     sender,
     sendResponse
   ) {
-    if (message.type === "set-selected-node") {
-      setSelectedNode(message.payload);
+    if (message.type === "set-selected-node-attrs") {
+      setSelectedNodeAttrs(message.payload);
     }
     sendResponse("ack");
   });
@@ -134,11 +137,14 @@ const SidePanel: React.FC = () => {
       >
         Obscure PII on page
       </Button>
-      {selectedNode && (
+      {selectedNodeAttrs && (
         <>
           <br />
           <br />
-          <SelectionMenu extensionIsActive={extensionIsActive} />
+          <SelectionMenu
+            extensionIsActive={extensionIsActive}
+            selectedNodeAttrs={selectedNodeAttrs}
+          />
         </>
       )}
     </div>
