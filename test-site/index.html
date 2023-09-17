@@ -4,13 +4,29 @@
     <style>
       body {
         font-family: Helvetica, sans-serif;
-        font-size: 1.4em;
+        font-size: 1.3em;
+        padding: 20px;
+        line-height: 1.5;
+      }
+
+      h1 {
+        font-size: 2em;
+        margin-bottom: 0;
+      }
+
+      h2 {
+        font-size: 1.5em;
+        margin-top: 10px;
+        margin-bottom: 5px;
+      }
+
+      p {
+        margin-top: 0px;
       }
     </style>
   </head>
   <body>
     <h1>Test site</h1>
-    <p>This is a basic test site for Screenshot Studio.</p>
     <h2>Link clicks</h2>
     <p>
       Here's a link that should <strong>not</strong> work when the extension is
@@ -26,7 +42,10 @@
       <li>My name is Jen Gilbert.</li>
     </ul>
     <h2>Highlighting tests</h2>
-    <p>Here is an extra-useful div. Tell everyone about it!</p>
+    <p>
+      Here is an extra-useful div. Tell everyone about it by showcasing it and
+      labeling it!
+    </p>
     <div
       style="
         width: 400px;
@@ -42,8 +61,10 @@
       </ul>
       <button>Automatically solve all problems</button>
     </div>
-    <h2>Image tests</h2>
-    <p>This image is almost too majestic for the world to handle.</p>
-    <img width="200" src="assets/meowdy.jpg" />
+    <h2>Blur test</h2>
+    <p>
+      This image is almost too majestic for the world to handle. Better blur it.
+    </p>
+    <img width="200" style="border: 1px solid black" src="assets/meowdy.jpg" />
   </body>
 </html>

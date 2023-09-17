@@ -132,6 +132,7 @@ function addLabel(node: HTMLElement) {
   label.style.height = "20px";
   label.style.left = `${rect.left + 5}px`;
   label.style.backgroundColor = "hotpink";
+  label.style.lineHeight = "normal";
   label.style.color = "white";
   label.style.paddingLeft = "10px";
   label.style.paddingRight = "10px";
