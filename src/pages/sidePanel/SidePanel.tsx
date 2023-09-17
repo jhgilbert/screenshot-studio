@@ -2,9 +2,6 @@ import React, { useState } from "react";
 import "@pages/panel/Panel.css";
 import Switch from "@mui/material/Switch";
 import Button from "@mui/material/Button";
-import BlurOnIcon from "@mui/icons-material/BlurOn";
-import DeblurIcon from "@mui/icons-material/Deblur";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
 const sendMessage = async (message: { type: string; payload?: any }) => {
   const [tab] = await chrome.tabs.query({

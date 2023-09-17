@@ -3,16 +3,98 @@ console.log("content loaded");
 let selectedNode: HTMLElement | null = null;
 let extensionIsActive: boolean = false;
 
+const SELECTED_NODE_CLASS = "screenshot-studio-selected-element";
+
 function selectNode(node: HTMLElement) {
   deselectNode(selectedNode);
   selectedNode = node;
-  node.style.outline = "2px dotted hotpink";
+  selectedNode.classList.add(SELECTED_NODE_CLASS);
+  // make selected node editable
+  recursivelyMakeEditable(selectedNode);
   chrome.runtime.sendMessage({
     type: "set-selected-node-attrs",
     payload: {
       innerText: selectedNode.innerText,
     },
   });
+}
+
+function dragElement(elmnt) {
+  var pos1 = 0,
+    pos2 = 0,
+    pos3 = 0,
+    pos4 = 0;
+  if (document.getElementById(elmnt.id + "header")) {
+    // if present, the header is where you move the DIV from:
+    document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+  } else {
+    // otherwise, move the DIV from anywhere inside the DIV:
+    elmnt.onmousedown = dragMouseDown;
+  }
+
+  function dragMouseDown(e) {
+    e = e || window.event;
+    e.preventDefault();
+    // get the mouse cursor position at startup:
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    document.onmouseup = closeDragElement;
+    // call a function whenever the cursor moves:
+    document.onmousemove = elementDrag;
+  }
+
+  function elementDrag(e) {
+    e = e || window.event;
+    e.preventDefault();
+    // calculate the new cursor position:
+    pos1 = pos3 - e.clientX;
+    pos2 = pos4 - e.clientY;
+    pos3 = e.clientX;
+    pos4 = e.clientY;
+    // set the element's new position:
+    elmnt.style.top = elmnt.offsetTop - pos2 + "px";
+    elmnt.style.left = elmnt.offsetLeft - pos1 + "px";
+  }
+
+  function closeDragElement() {
+    // stop moving when mouse button is released:
+    document.onmouseup = null;
+    document.onmousemove = null;
+  }
+}
+
+function addLabel(node: HTMLElement) {
+  // add a hot pink outline to the node
+  node.style.outline = "3px solid hotpink";
+  const nodeTopPadding = parseInt(
+    window.getComputedStyle(node).getPropertyValue("padding-top")
+  );
+  // prompt user to enter a label
+  const labelInput = prompt(
+    "Enter label text. Label will be draggable but not editable. But you can always delete it and re-label the selection."
+  );
+  // add a label div to the node
+  const label = document.createElement("div");
+  label.innerText = labelInput;
+  dragElement(label);
+  label.style.position = "absolute";
+  // put label on top of the node's border
+  const rect = node.getBoundingClientRect();
+  label.style.top = `${rect.top - 20 - nodeTopPadding}px`;
+  label.style.height = "20px";
+  label.style.left = `${rect.left + 5}px`;
+  label.style.backgroundColor = "hotpink";
+  label.style.color = "white";
+  label.style.paddingLeft = "10px";
+  label.style.paddingRight = "10px";
+  label.style.paddingTop = "5px";
+  label.style.paddingBottom = "5px";
+  label.style.fontSize = "18px";
+  label.style.fontWeight = "bold";
+  label.style.borderTopLeftRadius = "5px";
+  label.style.borderTopRightRadius = "5px";
+  node.append(label);
+  selectNode(label);
 }
 
 const blurFilterRegex = /blur\((\d+)px\)/;
@@ -39,9 +121,36 @@ function blurLess() {
   }
 }
 
+function recursivelyMakeEditable(node: HTMLElement) {
+  node.contentEditable = "true";
+  const children = node.children;
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i] as HTMLElement;
+    recursivelyMakeEditable(child);
+  }
+  const ancestors = getElementAncestors(node);
+  ancestors.forEach((ancestor) => {
+    ancestor.contentEditable = "true";
+  });
+}
+
+function recursivelyMakeUneditable(node: HTMLElement) {
+  node.contentEditable = "false";
+  const children = node.children;
+  for (let i = 0; i < children.length; i++) {
+    const child = children[i] as HTMLElement;
+    recursivelyMakeUneditable(child);
+  }
+  const ancestors = getElementAncestors(node);
+  ancestors.forEach((ancestor) => {
+    ancestor.contentEditable = "false";
+  });
+}
+
 function deselectNode(node: HTMLElement | null) {
   if (!node) return;
-  node.style.outline = "";
+  recursivelyMakeUneditable(node);
+  node.classList.remove(SELECTED_NODE_CLASS);
   chrome.runtime.sendMessage({
     type: "set-selected-node-attrs",
     payload: null,
@@ -163,9 +272,10 @@ chrome.runtime.onMessage.addListener(function (
     extensionIsActive = message.payload;
     if (!extensionIsActive) {
       deselectNode(selectedNode);
-    } else {
-      document.body.contentEditable = "true";
     }
+  } else if (message.type === "label-selected") {
+    if (!selectedNode) return;
+    addLabel(selectedNode);
   }
   sendResponse("ack");
 });
@@ -173,8 +283,10 @@ chrome.runtime.onMessage.addListener(function (
 document.addEventListener("click", function (e: PointerEvent) {
   if (!extensionIsActive) return;
   e.preventDefault();
+  e.stopImmediatePropagation();
   const target = e.target as HTMLElement;
   selectNode(target);
+  return false;
 });
 
 /**
