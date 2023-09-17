@@ -99,7 +99,7 @@ const SelectionMenu = ({
         Unlabel
       </Button>
       <Button
-        disabled={!selectedNodeAttrs.isShowcased}
+        disabled={selectedNodeAttrs.isShowcased}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
