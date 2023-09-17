@@ -13,14 +13,15 @@ const sendMessage = async (message: { type: string; payload?: any }) => {
 
 const SelectionMenu = ({
   extensionIsActive,
+  selectedNodeAttrs,
 }: {
   extensionIsActive: boolean;
+  selectedNodeAttrs: Record<string, any>;
 }) => {
   return (
     <div>
-      <p className="mt-2 mb-1 text-base">Change selection</p>
+      <p className="mt-4 mb-1 text-base text-center">Change selection</p>
       <Button
-        disabled={!extensionIsActive}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
@@ -30,7 +31,6 @@ const SelectionMenu = ({
         Select parent
       </Button>
       <Button
-        disabled={!extensionIsActive}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
@@ -39,9 +39,8 @@ const SelectionMenu = ({
       >
         Select none
       </Button>
-      <p className="mt-2 mb-1 text-base">Edit selected content</p>
+      <p className="mt-4 mb-1 text-base text-center">Edit selected content</p>
       <Button
-        disabled={!extensionIsActive}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
@@ -51,7 +50,7 @@ const SelectionMenu = ({
         Blur more
       </Button>
       <Button
-        disabled={!extensionIsActive}
+        disabled={!selectedNodeAttrs.isBlurred}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
@@ -61,7 +60,6 @@ const SelectionMenu = ({
         Blur less
       </Button>
       <Button
-        disabled={!extensionIsActive}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
@@ -71,7 +69,7 @@ const SelectionMenu = ({
         Delete
       </Button>
       <Button
-        disabled={!extensionIsActive}
+        disabled={selectedNodeAttrs.isHidden}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
@@ -81,7 +79,7 @@ const SelectionMenu = ({
         Hide
       </Button>
       <Button
-        disabled={!extensionIsActive}
+        disabled={selectedNodeAttrs.isLabeled}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
@@ -91,7 +89,17 @@ const SelectionMenu = ({
         Label
       </Button>
       <Button
-        disabled={!extensionIsActive}
+        disabled={!selectedNodeAttrs.isLabeled}
+        sx={{ width: "100%", marginBottom: "3px" }}
+        variant="outlined"
+        onClick={() => {
+          sendMessage({ type: "unlabel-selected" });
+        }}
+      >
+        Unlabel
+      </Button>
+      <Button
+        disabled={!selectedNodeAttrs.isShowcased}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
@@ -100,12 +108,15 @@ const SelectionMenu = ({
       >
         Showcase
       </Button>
+      <p className="text-base text-center mt-2">
+        You can edit the text of most selections.
+      </p>
     </div>
   );
 };
 
 const SidePanel: React.FC = () => {
-  const [selectedNodeText, setSelectedNodeText] = useState(null);
+  const [selectedNodeAttrs, setSelectedNodeAttrs] = useState(null);
   const [nodeIsSelected, setNodeIsSelected] = useState(false);
   const [extensionIsActive, setExtensionIsActive] = useState(false);
 
@@ -117,8 +128,10 @@ const SidePanel: React.FC = () => {
       console.log("set-selected-node-attrs", message.payload);
       if (message.payload !== null) {
         setNodeIsSelected(true);
+        setSelectedNodeAttrs(message.payload);
       } else {
         setNodeIsSelected(false);
+        setSelectedNodeAttrs(null);
       }
     }
   });
@@ -150,14 +163,16 @@ const SidePanel: React.FC = () => {
       </Button>
       {nodeIsSelected && (
         <>
-          <SelectionMenu extensionIsActive={extensionIsActive} />
+          <SelectionMenu
+            extensionIsActive={extensionIsActive}
+            selectedNodeAttrs={selectedNodeAttrs}
+          />
         </>
       )}
       {!nodeIsSelected && extensionIsActive && (
-        <ul>
-          <li>The page text is now directly editable.</li>
-          <li>Click on an element to select it.</li>
-        </ul>
+        <p className="text-base text-center mt-2">
+          Click on an element to select it.
+        </p>
       )}
     </div>
   );

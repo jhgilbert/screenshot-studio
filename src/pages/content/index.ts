@@ -4,19 +4,37 @@ let selectedNode: HTMLElement | null = null;
 let extensionIsActive: boolean = false;
 
 const SELECTED_NODE_CLASS = "screenshot-studio-selected-element";
+const LABEL_DIV_CLASS = "screenshot-studio-label";
+const LABELED_NODE_CLASS = "screenshot-studio-labeled-element";
+const SHOWCASED_NODE_CLASS = "screenshot-studio-showcased-element";
 
 function selectNode(node: HTMLElement) {
   deselectNode(selectedNode);
   selectedNode = node;
   selectedNode.classList.add(SELECTED_NODE_CLASS);
-  // make selected node editable
-  recursivelyMakeEditable(selectedNode);
+  if (selectedNode.classList.contains(LABEL_DIV_CLASS)) {
+    document.body.contentEditable = "false";
+  } else {
+    document.body.contentEditable = "true";
+  }
+  broadcastSelectionData();
+}
+
+function broadcastSelectionData() {
   chrome.runtime.sendMessage({
     type: "set-selected-node-attrs",
     payload: {
       innerText: selectedNode.innerText,
+      isLabeled: elementHasLabel(selectedNode),
+      isHidden: selectedNode.style.visibility === "hidden",
+      isBlurred: getCurrentBlurLevel(selectedNode) > 0,
+      isShowcased: selectedNode.classList.contains(SHOWCASED_NODE_CLASS),
     },
   });
+}
+
+function elementHasLabel(node: HTMLElement) {
+  return node.classList.contains(LABELED_NODE_CLASS);
 }
 
 function dragElement(elmnt) {
@@ -63,6 +81,15 @@ function dragElement(elmnt) {
   }
 }
 
+function unLabel(node: HTMLElement) {
+  const label = node.getElementsByClassName(LABEL_DIV_CLASS)[0];
+  if (label) {
+    label.remove();
+  }
+  node.classList.remove(LABELED_NODE_CLASS);
+  node.style.outline = "";
+}
+
 function addLabel(node: HTMLElement) {
   // add a hot pink outline to the node
   node.style.outline = "3px solid hotpink";
@@ -71,10 +98,11 @@ function addLabel(node: HTMLElement) {
   );
   // prompt user to enter a label
   const labelInput = prompt(
-    "Enter label text. Label will be draggable but not editable. But you can always delete it and re-label the selection."
+    "Enter label text. Label will be draggable, but not editable."
   );
   // add a label div to the node
   const label = document.createElement("div");
+  label.classList.add(LABEL_DIV_CLASS);
   label.innerText = labelInput;
   dragElement(label);
   label.style.position = "absolute";
@@ -121,35 +149,8 @@ function blurLess() {
   }
 }
 
-function recursivelyMakeEditable(node: HTMLElement) {
-  node.contentEditable = "true";
-  const children = node.children;
-  for (let i = 0; i < children.length; i++) {
-    const child = children[i] as HTMLElement;
-    recursivelyMakeEditable(child);
-  }
-  const ancestors = getElementAncestors(node);
-  ancestors.forEach((ancestor) => {
-    ancestor.contentEditable = "true";
-  });
-}
-
-function recursivelyMakeUneditable(node: HTMLElement) {
-  node.contentEditable = "false";
-  const children = node.children;
-  for (let i = 0; i < children.length; i++) {
-    const child = children[i] as HTMLElement;
-    recursivelyMakeUneditable(child);
-  }
-  const ancestors = getElementAncestors(node);
-  ancestors.forEach((ancestor) => {
-    ancestor.contentEditable = "false";
-  });
-}
-
 function deselectNode(node: HTMLElement | null) {
   if (!node) return;
-  recursivelyMakeUneditable(node);
   node.classList.remove(SELECTED_NODE_CLASS);
   chrome.runtime.sendMessage({
     type: "set-selected-node-attrs",
@@ -243,8 +244,10 @@ function showcaseSelected() {
 
   for (let i = 0; i < siblings.length; i++) {
     const sibling = siblings[i] as HTMLElement;
-    sibling.style.opacity = "0.3";
+    sibling.style.opacity = "0.25";
   }
+
+  selectedNode.classList.add(SHOWCASED_NODE_CLASS);
 }
 
 chrome.runtime.onMessage.addListener(function (
@@ -260,6 +263,7 @@ chrome.runtime.onMessage.addListener(function (
     blurLess();
   } else if (message.type === "delete-selected" && selectedNode) {
     selectedNode.style.display = "none";
+    deselectNode(selectedNode);
   } else if (message.type === "hide-selected" && selectedNode) {
     selectedNode.style.visibility = "hidden";
   } else if (message.type === "showcase-selected" && selectedNode) {
@@ -272,11 +276,17 @@ chrome.runtime.onMessage.addListener(function (
     extensionIsActive = message.payload;
     if (!extensionIsActive) {
       deselectNode(selectedNode);
+      document.body.contentEditable = "false";
     }
+    document.body.contentEditable = "true";
   } else if (message.type === "label-selected") {
     if (!selectedNode) return;
     addLabel(selectedNode);
+  } else if (message.type === "unlabel-selected") {
+    if (!selectedNode) return;
+    unLabel(selectedNode);
   }
+  broadcastSelectionData();
   sendResponse("ack");
 });
 
