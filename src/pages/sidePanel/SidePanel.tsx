@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import "@pages/panel/Panel.css";
 import Switch from "@mui/material/Switch";
 import Button from "@mui/material/Button";
+import BlurOnIcon from "@mui/icons-material/BlurOn";
+import DeblurIcon from "@mui/icons-material/Deblur";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 
 const sendMessage = async (message: { type: string; payload?: any }) => {
   const [tab] = await chrome.tabs.query({
@@ -11,41 +14,14 @@ const sendMessage = async (message: { type: string; payload?: any }) => {
   await chrome.tabs.sendMessage(tab.id, message);
 };
 
-const PageTextEditor = ({
-  text,
-  editCallback,
-}: {
-  text: string;
-  editCallback: (newText: string) => void;
-}) => {
-  console.log("re-rendering page text editor, text is", text);
-  const style = {
-    width: "100%",
-    padding: "5px",
-  };
-  // const [value, setValue] = useState(text);
-  const handleChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    // setValue(event.target.value);
-    editCallback(event.target.value);
-  };
-  return <textarea style={style} defaultValue={text} onChange={handleChange} />;
-};
-
 const SelectionMenu = ({
   extensionIsActive,
-  selectedNodeText,
 }: {
   extensionIsActive: boolean;
-  selectedNodeText: string;
 }) => {
   return (
     <div>
-      <PageTextEditor
-        text={selectedNodeText}
-        editCallback={(newText) => {
-          sendMessage({ type: "edit-selected-inner-text", payload: newText });
-        }}
-      />
+      <p className="mt-2 mb-1 text-base">Change selection</p>
       <Button
         disabled={!extensionIsActive}
         sx={{ width: "100%", marginBottom: "3px" }}
@@ -66,17 +42,26 @@ const SelectionMenu = ({
       >
         Select none
       </Button>
-      <br />
-      <br />
+      <p className="mt-2 mb-1 text-base">Edit selected content</p>
       <Button
         disabled={!extensionIsActive}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
-          sendMessage({ type: "blur-selected" });
+          sendMessage({ type: "blur-selected-more" });
         }}
       >
-        Blur selected
+        Blur more
+      </Button>
+      <Button
+        disabled={!extensionIsActive}
+        sx={{ width: "100%", marginBottom: "3px" }}
+        variant="outlined"
+        onClick={() => {
+          sendMessage({ type: "blur-selected-less" });
+        }}
+      >
+        Blur less
       </Button>
       <Button
         disabled={!extensionIsActive}
@@ -86,7 +71,7 @@ const SelectionMenu = ({
           sendMessage({ type: "delete-selected" });
         }}
       >
-        Delete selected
+        Delete
       </Button>
       <Button
         disabled={!extensionIsActive}
@@ -96,7 +81,7 @@ const SelectionMenu = ({
           sendMessage({ type: "hide-selected" });
         }}
       >
-        Hide selected
+        Hide
       </Button>
       <Button
         disabled={!extensionIsActive}
@@ -106,7 +91,7 @@ const SelectionMenu = ({
           sendMessage({ type: "label-selected" });
         }}
       >
-        Label selected
+        Label
       </Button>
       <Button
         disabled={!extensionIsActive}
@@ -116,7 +101,7 @@ const SelectionMenu = ({
           sendMessage({ type: "showcase-selected" });
         }}
       >
-        Showcase selected
+        Showcase
       </Button>
     </div>
   );
@@ -134,10 +119,8 @@ const SidePanel: React.FC = () => {
     if (message.type === "set-selected-node-attrs") {
       console.log("set-selected-node-attrs", message.payload);
       if (message.payload !== null) {
-        setSelectedNodeText(message.payload.innerText);
         setNodeIsSelected(true);
       } else {
-        setSelectedNodeText(null);
         setNodeIsSelected(false);
       }
     }
@@ -170,13 +153,14 @@ const SidePanel: React.FC = () => {
       </Button>
       {nodeIsSelected && (
         <>
-          <br />
-          <br />
-          <SelectionMenu
-            extensionIsActive={extensionIsActive}
-            selectedNodeText={selectedNodeText}
-          />
+          <SelectionMenu extensionIsActive={extensionIsActive} />
         </>
+      )}
+      {!nodeIsSelected && extensionIsActive && (
+        <ul>
+          <li>The page text is now directly editable.</li>
+          <li>Click on an element to select it.</li>
+        </ul>
       )}
     </div>
   );

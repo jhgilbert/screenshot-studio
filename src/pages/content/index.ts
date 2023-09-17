@@ -15,6 +15,30 @@ function selectNode(node: HTMLElement) {
   });
 }
 
+const blurFilterRegex = /blur\((\d+)px\)/;
+
+const getCurrentBlurLevel = (node: HTMLElement) => {
+  let currentBlurLevel: number = 0;
+  if (blurFilterRegex.test(node.style.filter)) {
+    currentBlurLevel = parseInt(node.style.filter.match(blurFilterRegex)[1]);
+  }
+  return currentBlurLevel;
+};
+
+function blurMore() {
+  if (!selectedNode) return;
+  const currentBlurLevel = getCurrentBlurLevel(selectedNode);
+  selectedNode.style.filter = `blur(${currentBlurLevel + 1}px)`;
+}
+
+function blurLess() {
+  if (!selectedNode) return;
+  const currentBlurLevel = getCurrentBlurLevel(selectedNode);
+  if (currentBlurLevel > 0) {
+    selectedNode.style.filter = `blur(${currentBlurLevel - 1}px)`;
+  }
+}
+
 function deselectNode(node: HTMLElement | null) {
   if (!node) return;
   node.style.outline = "";
@@ -121,8 +145,10 @@ chrome.runtime.onMessage.addListener(function (
 ) {
   if (message.type === "select-parent") {
     selectNode(selectedNode?.parentElement!);
-  } else if (message.type === "blur-selected" && selectedNode) {
-    selectedNode.style.filter = "blur(5px)";
+  } else if (message.type === "blur-selected-more" && selectedNode) {
+    blurMore();
+  } else if (message.type === "blur-selected-less" && selectedNode) {
+    blurLess();
   } else if (message.type === "delete-selected" && selectedNode) {
     selectedNode.style.display = "none";
   } else if (message.type === "hide-selected" && selectedNode) {
@@ -137,10 +163,9 @@ chrome.runtime.onMessage.addListener(function (
     extensionIsActive = message.payload;
     if (!extensionIsActive) {
       deselectNode(selectedNode);
+    } else {
+      document.body.contentEditable = "true";
     }
-  } else if (message.type === "edit-selected-inner-text") {
-    if (!selectedNode) return;
-    selectedNode.innerText = message.payload;
   }
   sendResponse("ack");
 });
