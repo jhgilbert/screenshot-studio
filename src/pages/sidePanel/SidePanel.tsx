@@ -2,47 +2,63 @@ import React, { useState } from "react";
 import "@pages/panel/Panel.css";
 import Switch from "@mui/material/Switch";
 import Button from "@mui/material/Button";
+import BlurOnIcon from "@mui/icons-material/BlurOn";
+import DeblurIcon from "@mui/icons-material/Deblur";
+import LabelIcon from "@mui/icons-material/Label";
+import LabelOffIcon from "@mui/icons-material/LabelOff";
+import FeaturedVideoIcon from "@mui/icons-material/FeaturedVideo";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import PreviewIcon from "@mui/icons-material/Preview";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AspectRatioIcon from "@mui/icons-material/AspectRatio";
+import DeselectIcon from "@mui/icons-material/Deselect";
 
 const sendMessage = async (message: { type: string; payload?: any }) => {
   const [tab] = await chrome.tabs.query({
     active: true,
     lastFocusedWindow: true,
   });
-  await chrome.tabs.sendMessage(tab.id, message);
+  const response = await chrome.tabs.sendMessage(tab.id, message);
+  return response;
 };
 
+/* TODO: The result of the sendMessage function needs to
+be used as the new selectedNodeAttrs state. */
+
 const SelectionMenu = ({
-  extensionIsActive,
   selectedNodeAttrs,
 }: {
-  extensionIsActive: boolean;
   selectedNodeAttrs: Record<string, any>;
 }) => {
   return (
     <div>
-      <p className="mt-4 mb-1 text-base text-center">Change selection</p>
+      <p className="mt-4 mb-1 text-base text-center">Select ...</p>
       <Button
-        sx={{ width: "100%", marginBottom: "3px" }}
+        sx={{ width: "50%", marginBottom: "3px" }}
         variant="outlined"
+        startIcon={<AspectRatioIcon />}
         onClick={() => {
           sendMessage({ type: "select-parent" });
         }}
       >
-        Select parent
+        Parent
       </Button>
       <Button
-        sx={{ width: "100%", marginBottom: "3px" }}
+        sx={{ width: "50%", marginBottom: "3px" }}
         variant="outlined"
+        startIcon={<DeselectIcon />}
         onClick={() => {
           sendMessage({ type: "select-none" });
         }}
       >
-        Select none
+        None
       </Button>
-      <p className="mt-4 mb-1 text-base text-center">Edit selected content</p>
+      <p className="mt-4 mb-1 text-base text-center">Edit selected content:</p>
       <Button
-        sx={{ width: "100%", marginBottom: "3px" }}
+        sx={{ width: "50%", marginBottom: "3px" }}
         variant="outlined"
+        startIcon={<BlurOnIcon />}
         onClick={() => {
           sendMessage({ type: "blur-selected-more" });
         }}
@@ -51,7 +67,8 @@ const SelectionMenu = ({
       </Button>
       <Button
         disabled={!selectedNodeAttrs.isBlurred}
-        sx={{ width: "100%", marginBottom: "3px" }}
+        startIcon={<DeblurIcon />}
+        sx={{ width: "50%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
           sendMessage({ type: "blur-selected-less" });
@@ -60,28 +77,10 @@ const SelectionMenu = ({
         Blur less
       </Button>
       <Button
-        sx={{ width: "100%", marginBottom: "3px" }}
-        variant="outlined"
-        onClick={() => {
-          sendMessage({ type: "delete-selected" });
-        }}
-      >
-        Delete
-      </Button>
-      <Button
-        disabled={selectedNodeAttrs.isHidden}
-        sx={{ width: "100%", marginBottom: "3px" }}
-        variant="outlined"
-        onClick={() => {
-          sendMessage({ type: "hide-selected" });
-        }}
-      >
-        Hide
-      </Button>
-      <Button
         disabled={selectedNodeAttrs.isLabeled}
-        sx={{ width: "100%", marginBottom: "3px" }}
+        sx={{ width: "50%", marginBottom: "3px" }}
         variant="outlined"
+        startIcon={<LabelIcon />}
         onClick={() => {
           sendMessage({ type: "label-selected" });
         }}
@@ -90,23 +89,71 @@ const SelectionMenu = ({
       </Button>
       <Button
         disabled={!selectedNodeAttrs.isLabeled}
-        sx={{ width: "100%", marginBottom: "3px" }}
+        sx={{ width: "50%", marginBottom: "3px" }}
         variant="outlined"
+        startIcon={<LabelOffIcon />}
         onClick={() => {
           sendMessage({ type: "unlabel-selected" });
         }}
       >
         Unlabel
       </Button>
+      <div className="mt-2"></div>
       <Button
         disabled={selectedNodeAttrs.isShowcased}
         sx={{ width: "100%", marginBottom: "3px" }}
         variant="outlined"
+        startIcon={<FeaturedVideoIcon />}
         onClick={() => {
           sendMessage({ type: "showcase-selected" });
         }}
       >
         Showcase
+      </Button>
+      <Button
+        disabled={!selectedNodeAttrs.isShowcased}
+        sx={{ width: "100%", marginBottom: "3px" }}
+        variant="outlined"
+        startIcon={<PreviewIcon />}
+        onClick={() => {
+          sendMessage({ type: "unshowcase-selected" });
+        }}
+      >
+        Remove showcase
+      </Button>
+      <div className="mt-2"></div>
+      <Button
+        disabled={selectedNodeAttrs.isHidden}
+        sx={{ width: "50%", marginBottom: "3px" }}
+        variant="outlined"
+        startIcon={<VisibilityOffIcon />}
+        onClick={() => {
+          sendMessage({ type: "hide-selected" });
+        }}
+      >
+        Hide
+      </Button>
+      <Button
+        disabled={!selectedNodeAttrs.isHidden}
+        sx={{ width: "50%", marginBottom: "3px" }}
+        variant="outlined"
+        startIcon={<VisibilityIcon />}
+        onClick={() => {
+          sendMessage({ type: "show-selected" });
+        }}
+      >
+        Show
+      </Button>
+      <Button
+        sx={{ width: "100%", marginBottom: "3px" }}
+        color="warning"
+        variant="outlined"
+        startIcon={<DeleteIcon />}
+        onClick={() => {
+          sendMessage({ type: "delete-selected" });
+        }}
+      >
+        Delete
       </Button>
       <p className="text-base text-center mt-2">
         You can edit the text of most selections.
@@ -163,10 +210,7 @@ const SidePanel: React.FC = () => {
       </Button>
       {nodeIsSelected && (
         <>
-          <SelectionMenu
-            extensionIsActive={extensionIsActive}
-            selectedNodeAttrs={selectedNodeAttrs}
-          />
+          <SelectionMenu selectedNodeAttrs={selectedNodeAttrs} />
         </>
       )}
       {!nodeIsSelected && extensionIsActive && (

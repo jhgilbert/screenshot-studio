@@ -20,8 +20,28 @@ function selectNode(node: HTMLElement) {
   broadcastSelectionData();
 }
 
-function broadcastSelectionData() {
-  chrome.runtime.sendMessage({
+const buildSelectedNodeAttrs = () => {
+  if (!selectedNode) return null;
+  const attrs: Record<string, any> = {
+    innerText: selectedNode.innerText,
+    isLabeled: elementHasLabel(selectedNode),
+    isHidden: selectedNode.style.visibility === "hidden",
+    isBlurred: getCurrentBlurLevel(selectedNode) > 0,
+    isShowcased: selectedNode.classList.contains(SHOWCASED_NODE_CLASS),
+  };
+  return attrs;
+};
+
+async function broadcastSelectionData() {
+  if (!selectedNode) {
+    await chrome.runtime.sendMessage({
+      type: "set-selected-node-attrs",
+      payload: null,
+    });
+    return;
+  }
+
+  await chrome.runtime.sendMessage({
     type: "set-selected-node-attrs",
     payload: {
       innerText: selectedNode.innerText,
@@ -250,7 +270,28 @@ function showcaseSelected() {
   selectedNode.classList.add(SHOWCASED_NODE_CLASS);
 }
 
-chrome.runtime.onMessage.addListener(function (
+function unshowcaseSelected() {
+  if (!selectedNode) return;
+  const ancestors = getElementAncestors(selectedNode);
+
+  // get the siblings of the selected element
+  let siblings: HTMLElement[] = [];
+  siblings = getElementSiblings(selectedNode);
+
+  // get the siblings of all ancestors
+  ancestors.forEach((ancestor) => {
+    siblings = siblings.concat(getElementSiblings(ancestor));
+  });
+
+  for (let i = 0; i < siblings.length; i++) {
+    const sibling = siblings[i] as HTMLElement;
+    sibling.style.opacity = "1";
+  }
+
+  selectedNode.classList.remove(SHOWCASED_NODE_CLASS);
+}
+
+chrome.runtime.onMessage.addListener(async function (
   message: { type: string; payload?: any },
   sender,
   sendResponse
@@ -266,8 +307,12 @@ chrome.runtime.onMessage.addListener(function (
     deselectNode(selectedNode);
   } else if (message.type === "hide-selected" && selectedNode) {
     selectedNode.style.visibility = "hidden";
+  } else if (message.type === "show-selected" && selectedNode) {
+    selectedNode.style.visibility = "visible";
   } else if (message.type === "showcase-selected" && selectedNode) {
     showcaseSelected();
+  } else if (message.type === "unshowcase-selected" && selectedNode) {
+    unshowcaseSelected();
   } else if (message.type === "obscure-pii") {
     obscurePii();
   } else if (message.type === "select-none") {
@@ -277,8 +322,9 @@ chrome.runtime.onMessage.addListener(function (
     if (!extensionIsActive) {
       deselectNode(selectedNode);
       document.body.contentEditable = "false";
+    } else {
+      document.body.contentEditable = "true";
     }
-    document.body.contentEditable = "true";
   } else if (message.type === "label-selected") {
     if (!selectedNode) return;
     addLabel(selectedNode);
@@ -286,8 +332,8 @@ chrome.runtime.onMessage.addListener(function (
     if (!selectedNode) return;
     unLabel(selectedNode);
   }
-  broadcastSelectionData();
-  sendResponse("ack");
+  // await broadcastSelectionData();
+  // sendResponse(buildSelectedNodeAttrs());
 });
 
 document.addEventListener("click", function (e: PointerEvent) {
