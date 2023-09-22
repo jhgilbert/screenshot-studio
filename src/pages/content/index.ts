@@ -1,3 +1,5 @@
+import { Message } from "@mui/icons-material";
+
 console.log("content loaded");
 
 const SELECTED_NODE_CLASS = "screenshot-studio-selected-element";
@@ -379,6 +381,8 @@ function docReady(fn) {
   }
 }
 
+docReady(addPageEventListeners);
+
 let pageEventListenersAdded = false;
 
 function addPageEventListeners() {
@@ -407,23 +411,21 @@ function addPageEventListeners() {
   pageEventListenersAdded = true;
 }
 
-/*
 chrome.runtime.onMessage.addListener(async function (
-  request,
+  message,
   sender,
   sendResponse
 ) {
   // listen for messages sent from background.js
-  if (request.message === "tab-updated") {
+  if (message.type === "tab-updated") {
     console.log("tab-updated message received from background worker"); // new url is now in content scripts!
+  } else if (message.type === "set-active-tab-id") {
+    console.log(
+      "set-active-tab-id message received from background worker",
+      message
+    );
   }
-  /*
-  await chrome.runtime.sendMessage({
-    type: "set-url",
-    payload: window.location.href,
-  });
 });
-*/
 
 /**
  * @description

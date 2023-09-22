@@ -14,9 +14,15 @@ chrome.sidePanel
 
 // send message on tab change
 chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
-  await chrome.tabs
-    .sendMessage(tabId, {
-      type: "tab-updated",
+  if (changeInfo.status !== "complete") return;
+  const [activeTab] = await chrome.tabs.query({
+    active: true,
+    lastFocusedWindow: true,
+  });
+  await chrome.runtime
+    .sendMessage({
+      type: "set-active-tab-id",
+      payload: activeTab.id,
     })
     .catch((e) => console.log(e));
 });
