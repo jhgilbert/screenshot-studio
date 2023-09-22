@@ -11,3 +11,10 @@ reloadOnUpdate("pages/content/style.scss");
 chrome.sidePanel
   .setPanelBehavior({ openPanelOnActionClick: true })
   .then(() => console.log("background loaded"));
+
+// send message on tab change
+chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
+  chrome.tabs.sendMessage(tabId, {
+    type: "tab-updated",
+  });
+});

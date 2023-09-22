@@ -180,6 +180,8 @@ const SidePanel: React.FC = () => {
         setNodeIsSelected(false);
         setSelectedNodeAttrs(null);
       }
+    } else if (message.type === "set-extension-is-active") {
+      setExtensionIsActive(message.payload);
     }
   });
 

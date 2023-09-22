@@ -1,12 +1,14 @@
 console.log("content loaded");
 
-let selectedNode: HTMLElement | null = null;
-let extensionIsActive: boolean = false;
+// solution: https://stackoverflow.com/questions/35451314/run-content-script-loop-only-when-tab-is-active
 
 const SELECTED_NODE_CLASS = "screenshot-studio-selected-element";
 const LABEL_DIV_CLASS = "screenshot-studio-label";
 const LABELED_NODE_CLASS = "screenshot-studio-labeled-element";
 const SHOWCASED_NODE_CLASS = "screenshot-studio-showcased-element";
+
+let selectedNode: HTMLElement | null = null;
+let extensionIsActive: boolean = false;
 
 function selectNode(node: HTMLElement) {
   deselectNode(selectedNode);
@@ -18,6 +20,25 @@ function selectNode(node: HTMLElement) {
     document.body.contentEditable = "true";
   }
   broadcastSelectionData();
+}
+
+/*
+We don't want all content scripts to respond to the service worker's message,
+just the content script that is active in the current tab.
+*/
+
+async function initialize() {
+  extensionIsActive = false;
+  await chrome.runtime.sendMessage({
+    type: "set-extension-is-active",
+    payload: false,
+  });
+  const selectedNodeInDom = document.getElementsByClassName(
+    SELECTED_NODE_CLASS
+  )[0] as HTMLElement;
+  if (selectedNodeInDom) {
+    selectNode(selectedNodeInDom);
+  }
 }
 
 const buildSelectedNodeAttrs = () => {
@@ -297,7 +318,12 @@ chrome.runtime.onMessage.addListener(async function (
   sender,
   sendResponse
 ) {
-  if (message.type === "select-parent") {
+  if (message.type === "tab-updated") {
+    await initialize();
+  } else if (message.type === "tab-changed") {
+    const url = window.location.href;
+    console.log("tab changed to ", url);
+  } else if (message.type === "select-parent") {
     selectNode(selectedNode?.parentElement!);
   } else if (message.type === "blur-selected-more" && selectedNode) {
     blurMore();
@@ -345,6 +371,24 @@ document.addEventListener("click", function (e: PointerEvent) {
   selectNode(target);
   return false;
 });
+
+/*
+chrome.runtime.onMessage.addListener(async function (
+  request,
+  sender,
+  sendResponse
+) {
+  // listen for messages sent from background.js
+  if (request.message === "tab-updated") {
+    console.log("tab-updated message received from background worker"); // new url is now in content scripts!
+  }
+  /*
+  await chrome.runtime.sendMessage({
+    type: "set-url",
+    payload: window.location.href,
+  });
+});
+*/
 
 /**
  * @description
