@@ -1,7 +1,5 @@
 console.log("content loaded");
 
-// solution: https://stackoverflow.com/questions/35451314/run-content-script-loop-only-when-tab-is-active
-
 const SELECTED_NODE_CLASS = "screenshot-studio-selected-element";
 const LABEL_DIV_CLASS = "screenshot-studio-label";
 const LABELED_NODE_CLASS = "screenshot-studio-labeled-element";
@@ -9,6 +7,19 @@ const SHOWCASED_NODE_CLASS = "screenshot-studio-showcased-element";
 
 let selectedNode: HTMLElement | null = null;
 let extensionIsActive: boolean = false;
+
+async function syncWithSidePanel() {
+  console.log("syncing with side panel");
+  await chrome.runtime
+    .sendMessage({
+      type: "set-extension-is-active",
+      payload: extensionIsActive,
+    })
+    .catch((e) => console.log(e));
+  broadcastSelectionData();
+}
+
+syncWithSidePanel();
 
 function selectNode(node: HTMLElement) {
   deselectNode(selectedNode);
@@ -27,20 +38,6 @@ We don't want all content scripts to respond to the service worker's message,
 just the content script that is active in the current tab.
 */
 
-async function initialize() {
-  extensionIsActive = false;
-  await chrome.runtime.sendMessage({
-    type: "set-extension-is-active",
-    payload: false,
-  });
-  const selectedNodeInDom = document.getElementsByClassName(
-    SELECTED_NODE_CLASS
-  )[0] as HTMLElement;
-  if (selectedNodeInDom) {
-    selectNode(selectedNodeInDom);
-  }
-}
-
 const buildSelectedNodeAttrs = () => {
   if (!selectedNode) return null;
   const attrs: Record<string, any> = {
@@ -55,23 +52,27 @@ const buildSelectedNodeAttrs = () => {
 
 async function broadcastSelectionData() {
   if (!selectedNode) {
-    await chrome.runtime.sendMessage({
-      type: "set-selected-node-attrs",
-      payload: null,
-    });
+    await chrome.runtime
+      .sendMessage({
+        type: "set-selected-node-attrs",
+        payload: null,
+      })
+      .catch((e) => console.log(e));
     return;
   }
 
-  await chrome.runtime.sendMessage({
-    type: "set-selected-node-attrs",
-    payload: {
-      innerText: selectedNode.innerText,
-      isLabeled: elementHasLabel(selectedNode),
-      isHidden: selectedNode.style.visibility === "hidden",
-      isBlurred: getCurrentBlurLevel(selectedNode) > 0,
-      isShowcased: selectedNode.classList.contains(SHOWCASED_NODE_CLASS),
-    },
-  });
+  await chrome.runtime
+    .sendMessage({
+      type: "set-selected-node-attrs",
+      payload: {
+        innerText: selectedNode.innerText,
+        isLabeled: elementHasLabel(selectedNode),
+        isHidden: selectedNode.style.visibility === "hidden",
+        isBlurred: getCurrentBlurLevel(selectedNode) > 0,
+        isShowcased: selectedNode.classList.contains(SHOWCASED_NODE_CLASS),
+      },
+    })
+    .catch((e) => console.log(e));
 }
 
 function elementHasLabel(node: HTMLElement) {
@@ -318,12 +319,13 @@ chrome.runtime.onMessage.addListener(async function (
   sender,
   sendResponse
 ) {
-  if (message.type === "tab-updated") {
-    await initialize();
-  } else if (message.type === "tab-changed") {
-    const url = window.location.href;
-    console.log("tab changed to ", url);
-  } else if (message.type === "select-parent") {
+  // if this is not the active tab, do nothing,
+  // because the user is not interacting with this page
+  if (document.visibilityState === "hidden") {
+    console.log("Message received, but page is hidden:", message);
+    return;
+  }
+  if (message.type === "select-parent") {
     selectNode(selectedNode?.parentElement!);
   } else if (message.type === "blur-selected-more" && selectedNode) {
     blurMore();
@@ -351,6 +353,7 @@ chrome.runtime.onMessage.addListener(async function (
       document.body.contentEditable = "false";
     } else {
       document.body.contentEditable = "true";
+      addPageEventListeners();
     }
   } else if (message.type === "label-selected") {
     if (!selectedNode) return;
@@ -363,14 +366,46 @@ chrome.runtime.onMessage.addListener(async function (
   // sendResponse(buildSelectedNodeAttrs());
 });
 
-document.addEventListener("click", function (e: PointerEvent) {
-  if (!extensionIsActive) return;
-  e.preventDefault();
-  e.stopImmediatePropagation();
-  const target = e.target as HTMLElement;
-  selectNode(target);
-  return false;
-});
+function docReady(fn) {
+  // see if DOM is already available
+  if (
+    document.readyState === "complete" ||
+    document.readyState === "interactive"
+  ) {
+    // call on next available tick
+    setTimeout(fn, 1);
+  } else {
+    document.addEventListener("DOMContentLoaded", fn);
+  }
+}
+
+let pageEventListenersAdded = false;
+
+function addPageEventListeners() {
+  if (pageEventListenersAdded) return;
+  console.log("Adding event listeners");
+  document.addEventListener("click", function (e: PointerEvent) {
+    if (!extensionIsActive) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    const target = e.target as HTMLElement;
+    selectNode(target);
+    return false;
+  });
+  document.addEventListener(
+    "visibilitychange",
+    async function () {
+      if (!document.hidden) {
+        console.log("This page is visible");
+        await syncWithSidePanel();
+      } else {
+        console.log("This page is hidden");
+      }
+    },
+    false
+  );
+  pageEventListenersAdded = true;
+}
 
 /*
 chrome.runtime.onMessage.addListener(async function (

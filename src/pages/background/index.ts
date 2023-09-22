@@ -13,8 +13,10 @@ chrome.sidePanel
   .then(() => console.log("background loaded"));
 
 // send message on tab change
-chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
-  chrome.tabs.sendMessage(tabId, {
-    type: "tab-updated",
-  });
+chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
+  await chrome.tabs
+    .sendMessage(tabId, {
+      type: "tab-updated",
+    })
+    .catch((e) => console.log(e));
 });

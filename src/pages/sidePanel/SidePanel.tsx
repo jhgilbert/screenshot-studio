@@ -15,6 +15,7 @@ import AspectRatioIcon from "@mui/icons-material/AspectRatio";
 import DeselectIcon from "@mui/icons-material/Deselect";
 
 const sendMessage = async (message: { type: string; payload?: any }) => {
+  console.log("Attempting to send message from side panel:", message);
   const [tab] = await chrome.tabs.query({
     active: true,
     lastFocusedWindow: true,
