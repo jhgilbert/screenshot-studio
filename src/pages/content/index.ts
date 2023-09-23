@@ -7,6 +7,7 @@ import {
 import { obscurePii } from "./pageOperations/pii";
 import { blurMore, blurLess, getCurrentBlurLevel } from "./nodeOperations/blur";
 import { addLabel, removeLabel, hasLabel } from "./nodeOperations/label";
+import { addShowcase, removeShowcase } from "./nodeOperations/showcase";
 
 let selectedNode: HTMLElement | null = null;
 let extensionIsActive: boolean = false;
@@ -25,7 +26,7 @@ async function syncWithSidePanel() {
 syncWithSidePanel();
 
 function selectNode(node: HTMLElement) {
-  deselectNode(selectedNode);
+  selectNone();
   selectedNode = node;
   selectedNode.classList.add(SELECTED_NODE_CLASS);
   if (selectedNode.classList.contains(LABEL_TAB_CLASS)) {
@@ -68,8 +69,7 @@ async function broadcastSelectionData() {
     .catch((e) => console.log(e));
 }
 
-function deselectNode(node: HTMLElement | null) {
-  if (!node) return;
+function deselectNode(node: HTMLElement) {
   node.classList.remove(SELECTED_NODE_CLASS);
   chrome.runtime.sendMessage({
     type: "set-selected-node-attrs",
@@ -77,69 +77,9 @@ function deselectNode(node: HTMLElement | null) {
   });
 }
 
-function getElementSiblings(element: HTMLElement) {
-  const siblings = [];
-  let sibling = element.parentNode?.firstChild as HTMLElement;
-  while (sibling) {
-    if (sibling.nodeType === 1 && sibling !== element) {
-      siblings.push(sibling);
-    }
-    sibling = sibling.nextSibling as HTMLElement;
-  }
-  return siblings;
-}
-
-function getElementAncestors(element: HTMLElement) {
-  const ancestors = [];
-  let ancestor = element.parentNode as HTMLElement;
-  while (ancestor) {
-    if (ancestor.nodeType === 1) {
-      ancestors.push(ancestor);
-    }
-    ancestor = ancestor.parentNode as HTMLElement;
-  }
-  return ancestors;
-}
-
-function addShowcase(node: HTMLElement) {
-  if (!node) return;
-  const ancestors = getElementAncestors(node);
-
-  // get the siblings of the selected element
-  let siblings: HTMLElement[] = [];
-  siblings = getElementSiblings(node);
-
-  // get the siblings of all ancestors
-  ancestors.forEach((ancestor) => {
-    siblings = siblings.concat(getElementSiblings(ancestor));
-  });
-
-  for (let i = 0; i < siblings.length; i++) {
-    const sibling = siblings[i] as HTMLElement;
-    sibling.style.opacity = "0.25";
-  }
-
-  node.classList.add(SHOWCASED_NODE_CLASS);
-}
-
-function removeShowcase(node: HTMLElement) {
-  const ancestors = getElementAncestors(node);
-
-  // get the siblings of the selected element
-  let siblings: HTMLElement[] = [];
-  siblings = getElementSiblings(node);
-
-  // get the siblings of all ancestors
-  ancestors.forEach((ancestor) => {
-    siblings = siblings.concat(getElementSiblings(node));
-  });
-
-  for (let i = 0; i < siblings.length; i++) {
-    const sibling = siblings[i] as HTMLElement;
-    sibling.style.opacity = "1";
-  }
-
-  node.classList.remove(SHOWCASED_NODE_CLASS);
+function selectNone() {
+  if (!selectedNode) return;
+  deselectNode(selectedNode);
 }
 
 chrome.runtime.onMessage.addListener(async function (
@@ -172,12 +112,12 @@ chrome.runtime.onMessage.addListener(async function (
     removeShowcase(selectedNode);
   } else if (message.type === "obscure-pii") {
     obscurePii(document);
-  } else if (message.type === "select-none") {
+  } else if (message.type === "select-none" && selectedNode) {
     deselectNode(selectedNode);
   } else if (message.type === "set-extension-is-active") {
     extensionIsActive = message.payload;
     if (!extensionIsActive) {
-      deselectNode(selectedNode);
+      selectNone();
       document.body.contentEditable = "false";
     } else {
       document.body.contentEditable = "true";
