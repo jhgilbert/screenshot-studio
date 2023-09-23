@@ -81,20 +81,21 @@ function elementHasLabel(node: HTMLElement) {
   return node.classList.contains(LABELED_NODE_CLASS);
 }
 
-function dragElement(elmnt) {
+function dragElement(elmnt: HTMLElement) {
   var pos1 = 0,
     pos2 = 0,
     pos3 = 0,
     pos4 = 0;
-  if (document.getElementById(elmnt.id + "header")) {
+  const header = document.getElementById(elmnt.id + "header");
+  if (header) {
     // if present, the header is where you move the DIV from:
-    document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+    header.onmousedown = dragMouseDown;
   } else {
     // otherwise, move the DIV from anywhere inside the DIV:
     elmnt.onmousedown = dragMouseDown;
   }
 
-  function dragMouseDown(e) {
+  function dragMouseDown(e: MouseEvent) {
     e = e || window.event;
     e.preventDefault();
     // get the mouse cursor position at startup:
@@ -105,7 +106,7 @@ function dragElement(elmnt) {
     document.onmousemove = elementDrag;
   }
 
-  function elementDrag(e) {
+  function elementDrag(e: MouseEvent) {
     e = e || window.event;
     e.preventDefault();
     // calculate the new cursor position:
@@ -141,22 +142,23 @@ function addLabel(node: HTMLElement) {
     window.getComputedStyle(node).getPropertyValue("padding-top")
   );
   // prompt user to enter a label
+  // TODO: Does prompt actually return null instead of an empty string?
   const labelInput = prompt(
     "Enter label text. Label will be draggable, but not editable."
   );
   // add a label div to the node
   const label = document.createElement("div");
   label.classList.add(LABEL_DIV_CLASS);
-  label.innerText = labelInput;
+  label.innerText = labelInput as string;
   dragElement(label);
   label.style.position = "absolute";
   // put label on top of the node's border
   const rect = node.getBoundingClientRect();
   label.style.top = `${rect.top - 20 - nodeTopPadding}px`;
-  label.style.height = "20px";
+  label.style.height = "30px";
   label.style.left = `${rect.left + 5}px`;
   label.style.backgroundColor = "hotpink";
-  label.style.lineHeight = "normal";
+  label.style.lineHeight = "20px";
   label.style.color = "white";
   label.style.paddingLeft = "10px";
   label.style.paddingRight = "10px";
@@ -164,8 +166,10 @@ function addLabel(node: HTMLElement) {
   label.style.paddingBottom = "5px";
   label.style.fontSize = "18px";
   label.style.fontWeight = "bold";
+  label.style.fontFamily = "Arial, sans-serif";
   label.style.borderTopLeftRadius = "5px";
   label.style.borderTopRightRadius = "5px";
+  node.classList.add(LABELED_NODE_CLASS);
   node.append(label);
   selectNode(label);
 }
@@ -175,7 +179,8 @@ const blurFilterRegex = /blur\((\d+)px\)/;
 const getCurrentBlurLevel = (node: HTMLElement) => {
   let currentBlurLevel: number = 0;
   if (blurFilterRegex.test(node.style.filter)) {
-    currentBlurLevel = parseInt(node.style.filter.match(blurFilterRegex)[1]);
+    const match = node.style.filter.match(blurFilterRegex) as RegExpMatchArray;
+    currentBlurLevel = parseInt(match[1]);
   }
   return currentBlurLevel;
 };
@@ -368,7 +373,7 @@ chrome.runtime.onMessage.addListener(async function (
   // sendResponse(buildSelectedNodeAttrs());
 });
 
-function docReady(fn) {
+function docReady(fn: () => any) {
   // see if DOM is already available
   if (
     document.readyState === "complete" ||
@@ -388,7 +393,7 @@ let pageEventListenersAdded = false;
 function addPageEventListeners() {
   if (pageEventListenersAdded) return;
   console.log("Adding event listeners");
-  document.addEventListener("click", function (e: PointerEvent) {
+  document.addEventListener("click", function (e: MouseEvent) {
     if (!extensionIsActive) return;
     e.preventDefault();
     e.stopImmediatePropagation();

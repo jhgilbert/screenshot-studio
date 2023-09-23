@@ -12,17 +12,16 @@ chrome.sidePanel
   .setPanelBehavior({ openPanelOnActionClick: true })
   .then(() => console.log("background loaded"));
 
-// send message on tab change
-chrome.tabs.onUpdated.addListener(async function (tabId, changeInfo, tab) {
-  if (changeInfo.status !== "complete") return;
-  const [activeTab] = await chrome.tabs.query({
-    active: true,
-    lastFocusedWindow: true,
-  });
-  await chrome.runtime
-    .sendMessage({
-      type: "set-active-tab-id",
-      payload: activeTab.id,
-    })
-    .catch((e) => console.log(e));
+chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
+  if (!tab.url) return;
+  const url = new URL(tab.url);
+  const chromeRegex = /chrome:\/\/.*/;
+  // if the url contains the string "chrome", close the side panel
+  if (url.href.match(chromeRegex)) {
+    await chrome.sidePanel.setOptions({
+      tabId,
+      enabled: false,
+    });
+  }
+  console.log(url);
 });

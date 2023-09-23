@@ -8,7 +8,7 @@ const manifest: chrome.runtime.ManifestV3 = {
   name: "Screenshot Studio",
   version: packageJson.version,
   description: packageJson.description,
-  permissions: ["storage", "sidePanel", "tabs", "scripting", "activeTab"],
+  permissions: ["storage", "sidePanel", "tabs", "scripting"],
   options_page: "src/pages/options/index.html",
   side_panel: {
     default_path: "src/pages/sidePanel/index.html",
@@ -30,7 +30,7 @@ const manifest: chrome.runtime.ManifestV3 = {
   },
   content_scripts: [
     {
-      matches: ["http://*/*", "https://*/*", "<all_urls>"],
+      matches: ["http://*/*", "https://*/*"],
       js: ["src/pages/content/index.js"],
       // KEY for cache invalidation
       css: ["assets/css/contentStyle<KEY>.chunk.css"],
