@@ -20,6 +20,10 @@ const sendMessage = async (message: { type: string; payload?: any }) => {
     active: true,
     lastFocusedWindow: true,
   });
+  if (tab === undefined || tab.id === undefined) {
+    console.log("No active tab found, message canceled.");
+    return;
+  }
   const response = await chrome.tabs.sendMessage(tab.id, message);
   return response;
 };
@@ -211,7 +215,7 @@ const SidePanel: React.FC = () => {
       >
         Obscure PII on page
       </Button>
-      {nodeIsSelected && (
+      {nodeIsSelected && selectedNodeAttrs !== null && (
         <>
           <SelectionMenu selectedNodeAttrs={selectedNodeAttrs} />
         </>
