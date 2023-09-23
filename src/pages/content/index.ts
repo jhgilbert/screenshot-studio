@@ -149,21 +149,24 @@ function addLabel(node: HTMLElement) {
   label.style.position = "absolute";
   // put label on top of the node's border
   const rect = node.getBoundingClientRect();
-  label.style.top = `${rect.top - 20 - nodeTopPadding}px`;
-  label.style.height = "30px";
-  label.style.left = `${rect.left + 5}px`;
-  label.style.backgroundColor = "hotpink";
-  label.style.lineHeight = "20px";
-  label.style.color = "white";
-  label.style.paddingLeft = "10px";
-  label.style.paddingRight = "10px";
-  label.style.paddingTop = "5px";
-  label.style.paddingBottom = "5px";
-  label.style.fontSize = "18px";
-  label.style.fontWeight = "bold";
-  label.style.fontFamily = "Arial, sans-serif";
-  label.style.borderTopLeftRadius = "5px";
-  label.style.borderTopRightRadius = "5px";
+  const labelStyle = {
+    top: `${rect.top - 20 - nodeTopPadding}px`,
+    height: "30px",
+    left: `${rect.left + 5}px`,
+    backgroundColor: "hotpink",
+    lineHeight: "20px",
+    color: "white",
+    paddingLeft: "10px",
+    paddingRight: "10px",
+    paddingTop: "5px",
+    paddingBottom: "5px",
+    fontSize: "18px",
+    fontWeight: "bold",
+    fontFamily: "Arial, sans-serif",
+    borderTopLeftRadius: "5px",
+    borderTopRightRadius: "5px",
+  };
+  Object.assign(label.style, labelStyle);
   node.classList.add(LABELED_NODE_CLASS);
   node.append(label);
   selectNode(label);
