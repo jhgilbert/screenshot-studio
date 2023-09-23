@@ -5,7 +5,7 @@ import {
   LABELED_NODE_CLASS,
   SHOWCASED_NODE_CLASS,
 } from "../../definitions";
-import { z } from "zod";
+import { obscurePii } from "./pageOperations/pii";
 
 let selectedNode: HTMLElement | null = null;
 let extensionIsActive: boolean = false;
@@ -34,11 +34,6 @@ function selectNode(node: HTMLElement) {
   }
   broadcastSelectionData();
 }
-
-/*
-We don't want all content scripts to respond to the service worker's message,
-just the content script that is active in the current tab.
-*/
 
 const buildSelectedNodeAttrs = (
   selectedNode: HTMLElement
@@ -183,17 +178,15 @@ const getCurrentBlurLevel = (node: HTMLElement) => {
   return currentBlurLevel;
 };
 
-function blurMore() {
-  if (!selectedNode) return;
-  const currentBlurLevel = getCurrentBlurLevel(selectedNode);
-  selectedNode.style.filter = `blur(${currentBlurLevel + 1}px)`;
+function blurMore(node: HTMLElement) {
+  const currentBlurLevel = getCurrentBlurLevel(node);
+  node.style.filter = `blur(${currentBlurLevel + 1}px)`;
 }
 
-function blurLess() {
-  if (!selectedNode) return;
-  const currentBlurLevel = getCurrentBlurLevel(selectedNode);
+function blurLess(node: HTMLElement) {
+  const currentBlurLevel = getCurrentBlurLevel(node);
   if (currentBlurLevel > 0) {
-    selectedNode.style.filter = `blur(${currentBlurLevel - 1}px)`;
+    node.style.filter = `blur(${currentBlurLevel - 1}px)`;
   }
 }
 
@@ -204,53 +197,6 @@ function deselectNode(node: HTMLElement | null) {
     type: "set-selected-node-attrs",
     payload: null,
   });
-}
-
-function temporarilyHighlightObscuredPii() {
-  const obscuredPii = document.getElementsByClassName(
-    "screenshot-studio-obscured-pii"
-  );
-  if (obscuredPii) {
-    for (let i = 0; i < obscuredPii.length; i++) {
-      const element = obscuredPii[i] as HTMLElement;
-      element.style.backgroundColor = "yellow";
-      setTimeout(() => {
-        element.style.backgroundColor = "";
-      }, 5000);
-    }
-  }
-}
-
-function obscureIpAddressesOnPage() {
-  const ipRegex = /\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/g;
-  const ipAddresses = document.body.innerText.match(ipRegex);
-  if (ipAddresses) {
-    ipAddresses.forEach((ipAddress) => {
-      document.body.innerHTML = document.body.innerHTML.replace(
-        ipAddress,
-        "<span class='screenshot-studio-obscured-pii'>0.0.0.0</span>"
-      );
-    });
-  }
-}
-
-function obscureEmailAddressesOnPage() {
-  const emailRegex = /\S+@\S+\.\S+/g;
-  const emailAddresses = document.body.innerText.match(emailRegex);
-  if (emailAddresses) {
-    emailAddresses.forEach((emailAddress) => {
-      document.body.innerHTML = document.body.innerHTML.replace(
-        emailAddress,
-        "<span class='screenshot-studio-obscured-pii'>user@example.com</span>"
-      );
-    });
-  }
-}
-
-function obscurePii() {
-  obscureIpAddressesOnPage();
-  obscureEmailAddressesOnPage();
-  temporarilyHighlightObscuredPii();
 }
 
 function getElementSiblings(element: HTMLElement) {
@@ -333,9 +279,9 @@ chrome.runtime.onMessage.addListener(async function (
   if (message.type === "select-parent") {
     selectNode(selectedNode?.parentElement!);
   } else if (message.type === "blur-selected-more" && selectedNode) {
-    blurMore();
+    blurMore(selectedNode);
   } else if (message.type === "blur-selected-less" && selectedNode) {
-    blurLess();
+    blurLess(selectedNode);
   } else if (message.type === "delete-selected" && selectedNode) {
     selectedNode.style.display = "none";
     deselectNode(selectedNode);
@@ -348,7 +294,7 @@ chrome.runtime.onMessage.addListener(async function (
   } else if (message.type === "unshowcase-selected" && selectedNode) {
     unshowcaseSelected();
   } else if (message.type === "obscure-pii") {
-    obscurePii();
+    obscurePii(document);
   } else if (message.type === "select-none") {
     deselectNode(selectedNode);
   } else if (message.type === "set-extension-is-active") {
