@@ -13,6 +13,7 @@ import PreviewIcon from "@mui/icons-material/Preview";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AspectRatioIcon from "@mui/icons-material/AspectRatio";
 import DeselectIcon from "@mui/icons-material/Deselect";
+import { SelectedNodeAttrs } from "../../definitions";
 
 const sendMessage = async (message: { type: string; payload?: any }) => {
   console.log("Attempting to send message from side panel:", message);
@@ -34,7 +35,7 @@ be used as the new selectedNodeAttrs state. */
 const SelectionMenu = ({
   selectedNodeAttrs,
 }: {
-  selectedNodeAttrs: Record<string, any>;
+  selectedNodeAttrs: SelectedNodeAttrs;
 }) => {
   return (
     <div>
@@ -168,9 +169,10 @@ const SelectionMenu = ({
 };
 
 const SidePanel: React.FC = () => {
-  const [selectedNodeAttrs, setSelectedNodeAttrs] = useState(null);
-  const [nodeIsSelected, setNodeIsSelected] = useState(false);
-  const [extensionIsActive, setExtensionIsActive] = useState(false);
+  const [selectedNodeAttrs, setSelectedNodeAttrs] =
+    useState<SelectedNodeAttrs | null>(null);
+  const [nodeIsSelected, setNodeIsSelected] = useState<boolean>(false);
+  const [extensionIsActive, setExtensionIsActive] = useState<boolean>(false);
 
   chrome.runtime.onMessage.addListener(function (message: {
     type: string;

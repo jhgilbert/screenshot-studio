@@ -1,10 +1,11 @@
-import { SelectedNodeAttrs } from "../../definitions";
+import {
+  SelectedNodeAttrs,
+  SELECTED_NODE_CLASS,
+  LABEL_TAB_CLASS,
+  LABELED_NODE_CLASS,
+  SHOWCASED_NODE_CLASS,
+} from "../../definitions";
 import { z } from "zod";
-
-const SELECTED_NODE_CLASS = "screenshot-studio-selected-element";
-const LABEL_DIV_CLASS = "screenshot-studio-label";
-const LABELED_NODE_CLASS = "screenshot-studio-labeled-element";
-const SHOWCASED_NODE_CLASS = "screenshot-studio-showcased-element";
 
 let selectedNode: HTMLElement | null = null;
 let extensionIsActive: boolean = false;
@@ -26,7 +27,7 @@ function selectNode(node: HTMLElement) {
   deselectNode(selectedNode);
   selectedNode = node;
   selectedNode.classList.add(SELECTED_NODE_CLASS);
-  if (selectedNode.classList.contains(LABEL_DIV_CLASS)) {
+  if (selectedNode.classList.contains(LABEL_TAB_CLASS)) {
     document.body.contentEditable = "false";
   } else {
     document.body.contentEditable = "true";
@@ -121,7 +122,7 @@ function dragElement(elmnt: HTMLElement) {
 }
 
 function unLabel(node: HTMLElement) {
-  const label = node.getElementsByClassName(LABEL_DIV_CLASS)[0];
+  const label = node.getElementsByClassName(LABEL_TAB_CLASS)[0];
   if (label) {
     label.remove();
   }
@@ -142,7 +143,7 @@ function addLabel(node: HTMLElement) {
   );
   // add a label div to the node
   const label = document.createElement("div");
-  label.classList.add(LABEL_DIV_CLASS);
+  label.classList.add(LABEL_TAB_CLASS);
   label.innerText = labelInput as string;
   dragElement(label);
   label.style.position = "absolute";

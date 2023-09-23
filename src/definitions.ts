@@ -5,6 +5,12 @@ be the same throughout the code.
 
 import { z } from "zod";
 
+// Element classes
+export const SELECTED_NODE_CLASS = "screenshot-studio-selected-element";
+export const LABEL_TAB_CLASS = "screenshot-studio-label";
+export const LABELED_NODE_CLASS = "screenshot-studio-labeled-element";
+export const SHOWCASED_NODE_CLASS = "screenshot-studio-showcased-element";
+
 // Selected node
 export const SelectedNodeAttrsSchema = z
   .object({
