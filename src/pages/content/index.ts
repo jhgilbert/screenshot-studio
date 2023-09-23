@@ -6,6 +6,7 @@ import {
   SHOWCASED_NODE_CLASS,
 } from "../../definitions";
 import { obscurePii } from "./pageOperations/pii";
+import { blurMore, blurLess } from "./nodeOperations/blur";
 
 let selectedNode: HTMLElement | null = null;
 let extensionIsActive: boolean = false;
@@ -165,29 +166,6 @@ function addLabel(node: HTMLElement) {
   node.classList.add(LABELED_NODE_CLASS);
   node.append(label);
   selectNode(label);
-}
-
-const blurFilterRegex = /blur\((\d+)px\)/;
-
-const getCurrentBlurLevel = (node: HTMLElement) => {
-  let currentBlurLevel: number = 0;
-  if (blurFilterRegex.test(node.style.filter)) {
-    const match = node.style.filter.match(blurFilterRegex) as RegExpMatchArray;
-    currentBlurLevel = parseInt(match[1]);
-  }
-  return currentBlurLevel;
-};
-
-function blurMore(node: HTMLElement) {
-  const currentBlurLevel = getCurrentBlurLevel(node);
-  node.style.filter = `blur(${currentBlurLevel + 1}px)`;
-}
-
-function blurLess(node: HTMLElement) {
-  const currentBlurLevel = getCurrentBlurLevel(node);
-  if (currentBlurLevel > 0) {
-    node.style.filter = `blur(${currentBlurLevel - 1}px)`;
-  }
 }
 
 function deselectNode(node: HTMLElement | null) {
