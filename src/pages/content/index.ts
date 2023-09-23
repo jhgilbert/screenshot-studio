@@ -1,9 +1,12 @@
-import { SelectedNodeAttrs, SHOWCASED_NODE_CLASS } from "../../definitions";
+import {
+  SelectedNodeAttrs,
+  ExtensionState,
+  SHOWCASED_NODE_CLASS,
+} from "@root/src/definitions";
 import { obscurePii } from "./pageOperations/pii";
 import { blurMore, blurLess, getCurrentBlurLevel } from "./nodeOperations/blur";
 import { addLabel, removeLabel, hasLabel } from "./nodeOperations/label";
 import { addShowcase, removeShowcase } from "./nodeOperations/showcase";
-
 import {
   selectNode,
   deselectNode,
@@ -23,6 +26,21 @@ async function syncWithSidePanel() {
     .catch((e) => console.log(e));
   const selectedNode = getSelectedNode(document);
   broadcastSelectionData(selectedNode);
+}
+
+function buildExtensionState(): ExtensionState {
+  const selectedNode = getSelectedNode(document);
+  let selectedNodeAttrs: SelectedNodeAttrs | undefined;
+  if (!selectedNode) {
+    selectedNodeAttrs = undefined;
+  } else {
+    selectedNodeAttrs = buildSelectedNodeAttrs(selectedNode);
+  }
+  return {
+    extensionIsActive,
+    nodeIsSelected: !!selectedNode,
+    selectedNodeAttrs,
+  };
 }
 
 syncWithSidePanel();
@@ -87,21 +105,21 @@ chrome.runtime.onMessage.addListener(async function (
 
   // handle node operations
   const selectedNode = getSelectedNode(document);
-  if (!selectedNode) return;
+  if (!selectedNode) {
+    sendResponse(buildExtensionState());
+    return;
+  }
 
   switch (message.type) {
     case "blur-selected-more":
       blurMore(selectedNode);
-      broadcastSelectionData(selectedNode);
       break;
     case "blur-selected-less":
       blurLess(selectedNode);
-      broadcastSelectionData(selectedNode);
       break;
     case "delete-selected":
       selectedNode.style.display = "none";
       deselectNode(selectedNode);
-      broadcastSelectionData(null);
       break;
     case "hide-selected":
       selectedNode.style.visibility = "hidden";
@@ -111,29 +129,23 @@ chrome.runtime.onMessage.addListener(async function (
       break;
     case "showcase-selected":
       addShowcase(selectedNode);
-      broadcastSelectionData(selectedNode);
       break;
     case "unshowcase-selected":
       removeShowcase(selectedNode);
-      broadcastSelectionData(selectedNode);
       break;
     case "select-none":
       deselectNode(selectedNode);
-      broadcastSelectionData(null);
       break;
     case "label-selected":
       const labelNode = addLabel(selectedNode);
       selectNode({ document, node: labelNode });
-      broadcastSelectionData(labelNode);
       break;
     case "unlabel-selected":
       removeLabel(selectedNode);
-      broadcastSelectionData(selectedNode);
       break;
   }
 
-  // await broadcastSelectionData();
-  // sendResponse(buildSelectedNodeAttrs());
+  sendResponse(buildExtensionState());
 });
 
 function docReady(fn: () => any) {

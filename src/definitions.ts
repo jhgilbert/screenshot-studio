@@ -23,3 +23,14 @@ export const SelectedNodeAttrsSchema = z
   .strict();
 
 export type SelectedNodeAttrs = z.infer<typeof SelectedNodeAttrsSchema>;
+
+// Extension state
+export const ExtensionStateSchema = z
+  .object({
+    extensionIsActive: z.boolean(),
+    nodeIsSelected: z.boolean(),
+    selectedNodeAttrs: SelectedNodeAttrsSchema.optional(),
+  })
+  .strict();
+
+export type ExtensionState = z.infer<typeof ExtensionStateSchema>;
