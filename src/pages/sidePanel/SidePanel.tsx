@@ -13,29 +13,17 @@ import PreviewIcon from "@mui/icons-material/Preview";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AspectRatioIcon from "@mui/icons-material/AspectRatio";
 import DeselectIcon from "@mui/icons-material/Deselect";
-import { SelectedNodeAttrs } from "../../definitions";
-
-const sendMessage = async (message: { type: string; payload?: any }) => {
-  console.log("Attempting to send message from side panel:", message);
-  const [tab] = await chrome.tabs.query({
-    active: true,
-    lastFocusedWindow: true,
-  });
-  if (tab === undefined || tab.id === undefined) {
-    console.log("No active tab found, message canceled.");
-    return;
-  }
-  const response = await chrome.tabs.sendMessage(tab.id, message);
-  return response;
-};
+import { SelectedNodeAttrs, ExtensionState } from "../../definitions";
 
 /* TODO: The result of the sendMessage function needs to
 be used as the new selectedNodeAttrs state. */
 
 const SelectionMenu = ({
   selectedNodeAttrs,
+  sendMessageCallback,
 }: {
   selectedNodeAttrs: SelectedNodeAttrs;
+  sendMessageCallback: (message: { type: string }) => void;
 }) => {
   return (
     <div>
@@ -45,7 +33,7 @@ const SelectionMenu = ({
         variant="outlined"
         startIcon={<AspectRatioIcon />}
         onClick={() => {
-          sendMessage({ type: "select-parent" });
+          sendMessageCallback({ type: "select-parent" });
         }}
       >
         Parent
@@ -55,7 +43,7 @@ const SelectionMenu = ({
         variant="outlined"
         startIcon={<DeselectIcon />}
         onClick={() => {
-          sendMessage({ type: "select-none" });
+          sendMessageCallback({ type: "select-none" });
         }}
       >
         None
@@ -66,7 +54,7 @@ const SelectionMenu = ({
         variant="outlined"
         startIcon={<BlurOnIcon />}
         onClick={() => {
-          sendMessage({ type: "blur-selected-more" });
+          sendMessageCallback({ type: "blur-selected-more" });
         }}
       >
         Blur more
@@ -77,7 +65,7 @@ const SelectionMenu = ({
         sx={{ width: "50%", marginBottom: "3px" }}
         variant="outlined"
         onClick={() => {
-          sendMessage({ type: "blur-selected-less" });
+          sendMessageCallback({ type: "blur-selected-less" });
         }}
       >
         Blur less
@@ -88,7 +76,7 @@ const SelectionMenu = ({
         variant="outlined"
         startIcon={<LabelIcon />}
         onClick={() => {
-          sendMessage({ type: "label-selected" });
+          sendMessageCallback({ type: "label-selected" });
         }}
       >
         Label
@@ -99,7 +87,7 @@ const SelectionMenu = ({
         variant="outlined"
         startIcon={<LabelOffIcon />}
         onClick={() => {
-          sendMessage({ type: "unlabel-selected" });
+          sendMessageCallback({ type: "unlabel-selected" });
         }}
       >
         Unlabel
@@ -111,7 +99,7 @@ const SelectionMenu = ({
         variant="outlined"
         startIcon={<FeaturedVideoIcon />}
         onClick={() => {
-          sendMessage({ type: "showcase-selected" });
+          sendMessageCallback({ type: "showcase-selected" });
         }}
       >
         Showcase
@@ -122,7 +110,7 @@ const SelectionMenu = ({
         variant="outlined"
         startIcon={<PreviewIcon />}
         onClick={() => {
-          sendMessage({ type: "unshowcase-selected" });
+          sendMessageCallback({ type: "unshowcase-selected" });
         }}
       >
         Remove showcase
@@ -134,7 +122,7 @@ const SelectionMenu = ({
         variant="outlined"
         startIcon={<VisibilityOffIcon />}
         onClick={() => {
-          sendMessage({ type: "hide-selected" });
+          sendMessageCallback({ type: "hide-selected" });
         }}
       >
         Hide
@@ -145,7 +133,7 @@ const SelectionMenu = ({
         variant="outlined"
         startIcon={<VisibilityIcon />}
         onClick={() => {
-          sendMessage({ type: "show-selected" });
+          sendMessageCallback({ type: "show-selected" });
         }}
       >
         Show
@@ -156,7 +144,7 @@ const SelectionMenu = ({
         variant="outlined"
         startIcon={<DeleteIcon />}
         onClick={() => {
-          sendMessage({ type: "delete-selected" });
+          sendMessageCallback({ type: "delete-selected" });
         }}
       >
         Delete
@@ -173,6 +161,26 @@ const SidePanel: React.FC = () => {
     useState<SelectedNodeAttrs | null>(null);
   const [nodeIsSelected, setNodeIsSelected] = useState<boolean>(false);
   const [extensionIsActive, setExtensionIsActive] = useState<boolean>(false);
+
+  const sendMessage = async (message: { type: string; payload?: any }) => {
+    console.log("Attempting to send message from side panel:", message);
+    const [tab] = await chrome.tabs.query({
+      active: true,
+      lastFocusedWindow: true,
+    });
+    if (tab === undefined || tab.id === undefined) {
+      console.log("No active tab found, message canceled.");
+      return;
+    }
+    const {
+      nodeIsSelected,
+      extensionIsActive,
+      selectedNodeAttrs,
+    }: ExtensionState = await chrome.tabs.sendMessage(tab.id, message);
+    setNodeIsSelected(nodeIsSelected);
+    setExtensionIsActive(extensionIsActive);
+    setSelectedNodeAttrs(selectedNodeAttrs || null);
+  };
 
   chrome.runtime.onMessage.addListener(function (message: {
     type: string;
@@ -219,7 +227,10 @@ const SidePanel: React.FC = () => {
       </Button>
       {nodeIsSelected && selectedNodeAttrs !== null && (
         <>
-          <SelectionMenu selectedNodeAttrs={selectedNodeAttrs} />
+          <SelectionMenu
+            selectedNodeAttrs={selectedNodeAttrs}
+            sendMessageCallback={sendMessage}
+          />
         </>
       )}
       {!nodeIsSelected && extensionIsActive && (
