@@ -1,6 +1,5 @@
-import { Message } from "@mui/icons-material";
-
-console.log("content loaded");
+import { SelectedNodeAttrs } from "../../definitions";
+import { z } from "zod";
 
 const SELECTED_NODE_CLASS = "screenshot-studio-selected-element";
 const LABEL_DIV_CLASS = "screenshot-studio-label";
@@ -40,9 +39,10 @@ We don't want all content scripts to respond to the service worker's message,
 just the content script that is active in the current tab.
 */
 
-const buildSelectedNodeAttrs = () => {
-  if (!selectedNode) return null;
-  const attrs: Record<string, any> = {
+const buildSelectedNodeAttrs = (
+  selectedNode: HTMLElement
+): SelectedNodeAttrs => {
+  const attrs: SelectedNodeAttrs = {
     innerText: selectedNode.innerText,
     isLabeled: elementHasLabel(selectedNode),
     isHidden: selectedNode.style.visibility === "hidden",
@@ -66,13 +66,7 @@ async function broadcastSelectionData() {
   await chrome.runtime
     .sendMessage({
       type: "set-selected-node-attrs",
-      payload: {
-        innerText: selectedNode.innerText,
-        isLabeled: elementHasLabel(selectedNode),
-        isHidden: selectedNode.style.visibility === "hidden",
-        isBlurred: getCurrentBlurLevel(selectedNode) > 0,
-        isShowcased: selectedNode.classList.contains(SHOWCASED_NODE_CLASS),
-      },
+      payload: buildSelectedNodeAttrs(selectedNode),
     })
     .catch((e) => console.log(e));
 }
@@ -437,3 +431,5 @@ chrome.runtime.onMessage.addListener(async function (
  * Chrome extensions don't support modules in content scripts.
  */
 // import("./components/Demo");
+
+console.log("content loaded");
