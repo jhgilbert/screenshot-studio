@@ -7,6 +7,7 @@ import {
 } from "../../definitions";
 import { obscurePii } from "./pageOperations/pii";
 import { blurMore, blurLess, getCurrentBlurLevel } from "./nodeOperations/blur";
+import { makeDraggable } from "./nodeOperations/drag";
 
 let selectedNode: HTMLElement | null = null;
 let extensionIsActive: boolean = false;
@@ -72,51 +73,6 @@ function elementHasLabel(node: HTMLElement) {
   return node.classList.contains(LABELED_NODE_CLASS);
 }
 
-function dragElement(elmnt: HTMLElement) {
-  var pos1 = 0,
-    pos2 = 0,
-    pos3 = 0,
-    pos4 = 0;
-  const header = document.getElementById(elmnt.id + "header");
-  if (header) {
-    // if present, the header is where you move the DIV from:
-    header.onmousedown = dragMouseDown;
-  } else {
-    // otherwise, move the DIV from anywhere inside the DIV:
-    elmnt.onmousedown = dragMouseDown;
-  }
-
-  function dragMouseDown(e: MouseEvent) {
-    e = e || window.event;
-    e.preventDefault();
-    // get the mouse cursor position at startup:
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    document.onmouseup = closeDragElement;
-    // call a function whenever the cursor moves:
-    document.onmousemove = elementDrag;
-  }
-
-  function elementDrag(e: MouseEvent) {
-    e = e || window.event;
-    e.preventDefault();
-    // calculate the new cursor position:
-    pos1 = pos3 - e.clientX;
-    pos2 = pos4 - e.clientY;
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    // set the element's new position:
-    elmnt.style.top = elmnt.offsetTop - pos2 + "px";
-    elmnt.style.left = elmnt.offsetLeft - pos1 + "px";
-  }
-
-  function closeDragElement() {
-    // stop moving when mouse button is released:
-    document.onmouseup = null;
-    document.onmousemove = null;
-  }
-}
-
 function unLabel(node: HTMLElement) {
   const label = node.getElementsByClassName(LABEL_TAB_CLASS)[0];
   if (label) {
@@ -141,7 +97,7 @@ function addLabel(node: HTMLElement) {
   const label = document.createElement("div");
   label.classList.add(LABEL_TAB_CLASS);
   label.innerText = labelInput as string;
-  dragElement(label);
+  makeDraggable(label);
   label.style.position = "absolute";
   // put label on top of the node's border
   const rect = node.getBoundingClientRect();
