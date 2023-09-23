@@ -101,13 +101,13 @@ function getElementAncestors(element: HTMLElement) {
   return ancestors;
 }
 
-function showcaseSelected() {
-  if (!selectedNode) return;
-  const ancestors = getElementAncestors(selectedNode);
+function addShowcase(node: HTMLElement) {
+  if (!node) return;
+  const ancestors = getElementAncestors(node);
 
   // get the siblings of the selected element
   let siblings: HTMLElement[] = [];
-  siblings = getElementSiblings(selectedNode);
+  siblings = getElementSiblings(node);
 
   // get the siblings of all ancestors
   ancestors.forEach((ancestor) => {
@@ -119,20 +119,19 @@ function showcaseSelected() {
     sibling.style.opacity = "0.25";
   }
 
-  selectedNode.classList.add(SHOWCASED_NODE_CLASS);
+  node.classList.add(SHOWCASED_NODE_CLASS);
 }
 
-function unshowcaseSelected() {
-  if (!selectedNode) return;
-  const ancestors = getElementAncestors(selectedNode);
+function removeShowcase(node: HTMLElement) {
+  const ancestors = getElementAncestors(node);
 
   // get the siblings of the selected element
   let siblings: HTMLElement[] = [];
-  siblings = getElementSiblings(selectedNode);
+  siblings = getElementSiblings(node);
 
   // get the siblings of all ancestors
   ancestors.forEach((ancestor) => {
-    siblings = siblings.concat(getElementSiblings(ancestor));
+    siblings = siblings.concat(getElementSiblings(node));
   });
 
   for (let i = 0; i < siblings.length; i++) {
@@ -140,7 +139,7 @@ function unshowcaseSelected() {
     sibling.style.opacity = "1";
   }
 
-  selectedNode.classList.remove(SHOWCASED_NODE_CLASS);
+  node.classList.remove(SHOWCASED_NODE_CLASS);
 }
 
 chrome.runtime.onMessage.addListener(async function (
@@ -168,9 +167,9 @@ chrome.runtime.onMessage.addListener(async function (
   } else if (message.type === "show-selected" && selectedNode) {
     selectedNode.style.visibility = "visible";
   } else if (message.type === "showcase-selected" && selectedNode) {
-    showcaseSelected();
+    addShowcase(selectedNode);
   } else if (message.type === "unshowcase-selected" && selectedNode) {
-    unshowcaseSelected();
+    removeShowcase(selectedNode);
   } else if (message.type === "obscure-pii") {
     obscurePii(document);
   } else if (message.type === "select-none") {
