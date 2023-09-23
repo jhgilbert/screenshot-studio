@@ -6,7 +6,7 @@ import {
   SHOWCASED_NODE_CLASS,
 } from "../../definitions";
 import { obscurePii } from "./pageOperations/pii";
-import { blurMore, blurLess } from "./nodeOperations/blur";
+import { blurMore, blurLess, getCurrentBlurLevel } from "./nodeOperations/blur";
 
 let selectedNode: HTMLElement | null = null;
 let extensionIsActive: boolean = false;

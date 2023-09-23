@@ -1,6 +1,6 @@
 const blurFilterRegex = /blur\((\d+)px\)/;
 
-const getCurrentBlurLevel = (node: HTMLElement) => {
+export const getCurrentBlurLevel = (node: HTMLElement) => {
   let currentBlurLevel: number = 0;
   if (blurFilterRegex.test(node.style.filter)) {
     const match = node.style.filter.match(blurFilterRegex) as RegExpMatchArray;
