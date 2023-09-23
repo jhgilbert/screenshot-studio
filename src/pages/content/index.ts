@@ -1,13 +1,15 @@
-import {
-  SelectedNodeAttrs,
-  SELECTED_NODE_CLASS,
-  LABEL_TAB_CLASS,
-  SHOWCASED_NODE_CLASS,
-} from "../../definitions";
+import { SelectedNodeAttrs, SHOWCASED_NODE_CLASS } from "../../definitions";
 import { obscurePii } from "./pageOperations/pii";
 import { blurMore, blurLess, getCurrentBlurLevel } from "./nodeOperations/blur";
 import { addLabel, removeLabel, hasLabel } from "./nodeOperations/label";
 import { addShowcase, removeShowcase } from "./nodeOperations/showcase";
+
+import {
+  selectNode,
+  deselectNode,
+  selectNone,
+  getSelectedNode,
+} from "./nodeOperations/select";
 
 let extensionIsActive: boolean = false;
 
@@ -23,40 +25,7 @@ async function syncWithSidePanel() {
   broadcastSelectionData(selectedNode);
 }
 
-function getSelectedNode(document: Document): HTMLElement | null {
-  const selectedNodes = document.getElementsByClassName(SELECTED_NODE_CLASS);
-  if (selectedNodes.length === 0) return null;
-  if (selectedNodes.length > 1) {
-    console.error("More than one selected node found");
-  }
-  return selectedNodes[0] as HTMLElement;
-}
-
 syncWithSidePanel();
-
-function selectNode(node: HTMLElement) {
-  selectNone();
-  node.classList.add(SELECTED_NODE_CLASS);
-  if (node.classList.contains(LABEL_TAB_CLASS)) {
-    document.body.contentEditable = "false";
-  } else {
-    document.body.contentEditable = "true";
-  }
-  broadcastSelectionData(node);
-}
-
-const buildSelectedNodeAttrs = (
-  selectedNode: HTMLElement
-): SelectedNodeAttrs => {
-  const attrs: SelectedNodeAttrs = {
-    innerText: selectedNode.innerText,
-    isLabeled: hasLabel(selectedNode),
-    isHidden: selectedNode.style.visibility === "hidden",
-    isBlurred: getCurrentBlurLevel(selectedNode) > 0,
-    isShowcased: selectedNode.classList.contains(SHOWCASED_NODE_CLASS),
-  };
-  return attrs;
-};
 
 async function broadcastSelectionData(selectedNode: HTMLElement | null) {
   if (!selectedNode) {
@@ -77,19 +46,18 @@ async function broadcastSelectionData(selectedNode: HTMLElement | null) {
     .catch((e) => console.log(e));
 }
 
-function deselectNode(node: HTMLElement) {
-  node.classList.remove(SELECTED_NODE_CLASS);
-  chrome.runtime.sendMessage({
-    type: "set-selected-node-attrs",
-    payload: null,
-  });
-}
-
-function selectNone() {
-  const selectedNode = getSelectedNode(document);
-  if (!selectedNode) return;
-  deselectNode(selectedNode);
-}
+const buildSelectedNodeAttrs = (
+  selectedNode: HTMLElement
+): SelectedNodeAttrs => {
+  const attrs: SelectedNodeAttrs = {
+    innerText: selectedNode.innerText,
+    isLabeled: hasLabel(selectedNode),
+    isHidden: selectedNode.style.visibility === "hidden",
+    isBlurred: getCurrentBlurLevel(selectedNode) > 0,
+    isShowcased: selectedNode.classList.contains(SHOWCASED_NODE_CLASS),
+  };
+  return attrs;
+};
 
 chrome.runtime.onMessage.addListener(async function (
   message: { type: string; payload?: any },
@@ -109,7 +77,7 @@ chrome.runtime.onMessage.addListener(async function (
   } else if (message.type === "set-extension-is-active") {
     extensionIsActive = message.payload;
     if (!extensionIsActive) {
-      selectNone();
+      selectNone(document);
       document.body.contentEditable = "false";
     } else {
       document.body.contentEditable = "true";
@@ -124,13 +92,16 @@ chrome.runtime.onMessage.addListener(async function (
   switch (message.type) {
     case "blur-selected-more":
       blurMore(selectedNode);
+      broadcastSelectionData(selectedNode);
       break;
     case "blur-selected-less":
       blurLess(selectedNode);
+      broadcastSelectionData(selectedNode);
       break;
     case "delete-selected":
       selectedNode.style.display = "none";
       deselectNode(selectedNode);
+      broadcastSelectionData(null);
       break;
     case "hide-selected":
       selectedNode.style.visibility = "hidden";
@@ -140,19 +111,24 @@ chrome.runtime.onMessage.addListener(async function (
       break;
     case "showcase-selected":
       addShowcase(selectedNode);
+      broadcastSelectionData(selectedNode);
       break;
     case "unshowcase-selected":
       removeShowcase(selectedNode);
+      broadcastSelectionData(selectedNode);
       break;
     case "select-none":
       deselectNode(selectedNode);
+      broadcastSelectionData(null);
       break;
     case "label-selected":
       const labelNode = addLabel(selectedNode);
-      selectNode(labelNode);
+      selectNode({ document, node: labelNode });
+      broadcastSelectionData(labelNode);
       break;
     case "unlabel-selected":
       removeLabel(selectedNode);
+      broadcastSelectionData(selectedNode);
       break;
   }
 
@@ -184,8 +160,8 @@ function addPageEventListeners() {
     if (!extensionIsActive) return;
     e.preventDefault();
     e.stopImmediatePropagation();
-    const target = e.target as HTMLElement;
-    selectNode(target);
+    const node = e.target as HTMLElement;
+    selectNode({ document, node });
     return false;
   });
   document.addEventListener(
