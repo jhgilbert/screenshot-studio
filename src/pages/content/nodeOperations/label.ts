@@ -15,11 +15,8 @@ export function removeLabel(node: HTMLElement) {
 }
 
 export function addLabel(node: HTMLElement) {
-  // add a hot pink outline to the node
   node.style.outline = "3px solid hotpink";
-  const nodeTopPadding = parseInt(
-    window.getComputedStyle(node).getPropertyValue("padding-top")
-  );
+  node.classList.add(LABELED_NODE_CLASS);
   // prompt user to enter a label
   // TODO: Does prompt actually return null instead of an empty string?
   const labelInput = prompt(
@@ -34,9 +31,9 @@ export function addLabel(node: HTMLElement) {
   // put label on top of the node's border
   const rect = node.getBoundingClientRect();
   const labelStyle = {
-    top: `${rect.top - 20 - nodeTopPadding}px`,
+    top: `-30px`,
     height: "20px",
-    left: `${rect.left + 5}px`,
+    left: `5px`,
     backgroundColor: "hotpink",
     lineHeight: "20px",
     color: "white",
@@ -50,9 +47,10 @@ export function addLabel(node: HTMLElement) {
     fontFamily: "Arial, sans-serif",
     borderTopLeftRadius: "5px",
     borderTopRightRadius: "5px",
+    boxSizing: "content-box",
+    zIndex: "10000",
   };
   Object.assign(label.style, labelStyle);
-  node.classList.add(LABELED_NODE_CLASS);
   node.append(label);
   return label;
 }
