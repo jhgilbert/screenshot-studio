@@ -15,7 +15,7 @@ export function removeLabel(node: HTMLElement) {
 }
 
 export function addLabel(node: HTMLElement) {
-  node.style.outline = "3px solid hotpink";
+  node.style.outline = "3px solid #75f763";
   node.classList.add(LABELED_NODE_CLASS);
   // prompt user to enter a label
   // TODO: Does prompt actually return null instead of an empty string?
@@ -34,17 +34,17 @@ export function addLabel(node: HTMLElement) {
     top: `-30px`,
     height: "20px",
     left: `5px`,
-    backgroundColor: "hotpink",
+    backgroundColor: "#75f763",
     lineHeight: "20px",
-    color: "white",
-    letterSpacing: "0.4",
+    color: "black",
+    letterSpacing: "0",
     paddingLeft: "10px",
     paddingRight: "10px",
     paddingTop: "5px",
     paddingBottom: "5px",
     fontSize: "18px",
     fontWeight: "bold",
-    fontFamily: "Arial, sans-serif",
+    fontFamily: "Helvetica, Arial, sans-serif",
     borderTopLeftRadius: "5px",
     borderTopRightRadius: "5px",
     boxSizing: "content-box",
