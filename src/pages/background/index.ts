@@ -10,7 +10,14 @@ reloadOnUpdate("pages/content/style.scss");
 
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
-// Only enable the side panel on supported tabs
+/**
+ * Only enable the side panel on tabs that support it.
+ * If a tab doesn't answer, it doesn't have a content script enabled,
+ * and the side panel should not be shown on that page.
+ *
+ * Most tabs support the extension, but chrome:// pages
+ * such as chrome://newtab do not.
+ */
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
   const activeTabId = activeInfo.tabId;
   if (!activeTabId) return;
@@ -27,6 +34,10 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
     });
 });
 
+/**
+ * If the user closes the side panel, send a message to every tab
+ * to deactivate the extension.
+ */
 chrome.runtime.onConnect.addListener(function (port) {
   if (port.name === "sidepanel") {
     port.onDisconnect.addListener(async () => {
@@ -42,6 +53,9 @@ chrome.runtime.onConnect.addListener(function (port) {
   }
 });
 
+/**
+ * Handle requests from content scripts to update the side panel.
+ */
 chrome.runtime.onMessage.addListener(async function (
   message: { type: string; payload?: any },
   sender,
