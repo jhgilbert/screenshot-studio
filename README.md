@@ -13,6 +13,8 @@ In addition to making the text on the page editable, Screenshot Studio offers th
 - **hide**: Hide the element while preserving the space it occupied.
 - **delete**: Delete the element from the page.
 
+![image](screenshot-studio.png)
+
 ## Acknowledgments
 
 This extension was adapted from the [chrome-extension-boilerplate-react-vite template](https://github.com/Jonghakseo/chrome-extension-boilerplate-react-vite). Thank you!
