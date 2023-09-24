@@ -237,27 +237,3 @@ function addPageEventListeners() {
   );
   pageEventListenersAdded = true;
 }
-
-chrome.runtime.onMessage.addListener(async function (
-  message,
-  sender,
-  sendResponse
-) {
-  // listen for messages sent from background.js
-  if (message.type === "tab-updated") {
-    console.log("tab-updated message received from background worker"); // new url is now in content scripts!
-  } else if (message.type === "set-active-tab-id") {
-    console.log(
-      "set-active-tab-id message received from background worker",
-      message
-    );
-  }
-});
-
-/**
- * @description
- * Chrome extensions don't support modules in content scripts.
- */
-// import("./components/Demo");
-
-console.log("content loaded");
