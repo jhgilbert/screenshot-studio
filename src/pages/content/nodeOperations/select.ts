@@ -27,10 +27,6 @@ export function selectNode({
 
 export function deselectNode(node: HTMLElement) {
   node.classList.remove(SELECTED_NODE_CLASS);
-  chrome.runtime.sendMessage({
-    type: "set-selected-node-attrs",
-    payload: null,
-  });
 }
 
 export function selectNone(document: Document) {

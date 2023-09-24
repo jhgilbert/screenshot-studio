@@ -8,10 +8,6 @@ reloadOnUpdate("pages/background");
  */
 reloadOnUpdate("pages/content/style.scss");
 
-chrome.sidePanel.setOptions({
-  enabled: false,
-});
-
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
 // Only enable the side panel on supported tabs
@@ -20,13 +16,14 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
   if (!activeTabId) return;
   chrome.tabs
     .sendMessage(activeTabId, { type: "confirm-sidepanel-support" })
-    .then((response) => {
+    .then(async (response) => {
       if (response.sidePanelIsSupported) {
         chrome.sidePanel.setOptions({ enabled: true });
       }
     })
     .catch(async (e) => {
-      await chrome.sidePanel.setOptions({ enabled: false });
+      chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+      chrome.sidePanel.setOptions({ enabled: false });
     });
 });
 
@@ -51,6 +48,7 @@ chrome.runtime.onMessage.addListener(async function (
   sendResponse
 ) {
   if (message.type === "enable-sidepanel") {
+    console.log("enabling side panel");
     await chrome.sidePanel.setOptions({ enabled: true });
     return;
   }

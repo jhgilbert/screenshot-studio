@@ -23,14 +23,17 @@ const SidePanel: React.FC = () => {
       console.log("No active tab found, message canceled.");
       return;
     }
-    const {
-      nodeIsSelected,
-      extensionIsActive,
-      selectedNodeAttrs,
-    }: ExtensionState = await chrome.tabs.sendMessage(tab.id, message);
-    setNodeIsSelected(nodeIsSelected);
-    setExtensionIsActive(extensionIsActive);
-    setSelectedNodeAttrs(selectedNodeAttrs || null);
+    const extensionState: ExtensionState | false = await chrome.tabs
+      .sendMessage(tab.id, message)
+      .catch((e) => {
+        console.log("Error sending message:", e);
+        return false;
+      });
+    if (extensionState) {
+      setNodeIsSelected(extensionState.nodeIsSelected);
+      setExtensionIsActive(extensionState.extensionIsActive);
+      setSelectedNodeAttrs(extensionState.selectedNodeAttrs || null);
+    }
   };
 
   chrome.runtime.onMessage.addListener(function (message: {

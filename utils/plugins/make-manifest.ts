@@ -21,8 +21,9 @@ export default function makeManifest(
 
     // Naming change for cache invalidation
     if (config.contentScriptCssKey) {
-      manifest.content_scripts.forEach((script) => {
-        script.css = script.css.map((css) =>
+      manifest.content_scripts?.forEach((script) => {
+        script.css = script.css?.map((css) =>
+          // @ts-ignore
           css.replace("<KEY>", config.contentScriptCssKey)
         );
       });

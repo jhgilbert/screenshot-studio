@@ -18,13 +18,16 @@ let extensionIsActive: boolean = false;
 
 // send a message to enable the sidepanel,
 // then set the sidepanel state for this tab
+console.log("enabling sidepanel");
 chrome.runtime.sendMessage({ type: "enable-sidepanel" }).then(() => {
   syncWithSidePanel();
+  console.log("sidepanel synced");
 });
 
 async function deactivateExtension() {
   extensionIsActive = false;
   selectNone(document);
+  broadcastSelectionData(null);
   removePageEventListeners();
 }
 
@@ -157,6 +160,11 @@ chrome.runtime.onMessage.addListener(async function (
     case "select-none":
       deselectNode(selectedNode);
       break;
+    case "select-parent":
+      const parent = selectedNode.parentElement;
+      if (!parent) break;
+      selectNode({ document, node: parent });
+      break;
     case "label-selected":
       const labelNode = addLabel(selectedNode);
       selectNode({ document, node: labelNode });
@@ -166,7 +174,10 @@ chrome.runtime.onMessage.addListener(async function (
       break;
   }
 
-  sendResponse(buildExtensionState());
+  const extensionState = buildExtensionState();
+  console.log("Sending extension state:", extensionState);
+
+  sendResponse(extensionState);
 });
 
 function docReady(fn: () => any) {
