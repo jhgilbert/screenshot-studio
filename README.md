@@ -12,3 +12,7 @@ In addition to making the text on the page editable, Screenshot Studio offers th
 - **showcase**: Fade everything on the page except for the selected element.
 - **hide**: Hide the element while preserving the space it occupied.
 - **delete**: Delete the element from the page.
+
+## Acknowledgments
+
+This extension was adapted from the [chrome-extension-boilerplate-react-vite template](https://github.com/Jonghakseo/chrome-extension-boilerplate-react-vite). Thank you!
