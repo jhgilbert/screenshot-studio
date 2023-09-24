@@ -18,10 +18,10 @@ import { docReady } from "./pageOperations/docReady";
 let extensionIsActive: boolean = false;
 let pageEventListenersAdded = false;
 
-/*
-Ensure that the side panel is enabled,
-then send the extension state to the side panel
-*/
+/**
+ * Ensure that the side panel is enabled,
+ * then send the extension state to the side panel.
+ */
 chrome.runtime.sendMessage({ type: "enable-sidepanel" }).then(() => {
   syncWithSidePanel();
 });
@@ -96,7 +96,7 @@ chrome.runtime.onMessage.addListener(async function (
   sender,
   sendResponse
 ) {
-  // deactivate the extension on every page when the side panel closes
+  // Deactivate the extension on every page when the side panel closes
   if (message.type === "sidepanel-closed") {
     deactivateExtension();
     return;
@@ -105,14 +105,14 @@ chrome.runtime.onMessage.addListener(async function (
     return;
   }
 
-  // if this is not the active tab, do nothing,
+  // If this is not the active tab, do nothing,
   // because the user is interacting with a different page,
   // not this one
   if (document.visibilityState === "hidden") {
     return;
   }
 
-  // handle page operations requested by the side panel
+  // Handle page operations requested by the side panel
   if (message.type === "obscure-pii") {
     obscurePii(document);
   } else if (message.type === "set-extension-is-active") {
@@ -127,7 +127,7 @@ chrome.runtime.onMessage.addListener(async function (
     }
   }
 
-  // handle node operations requested by the side panel
+  // Handle node operations requested by the side panel
   const selectedNode = getSelectedNode(document);
   if (!selectedNode) {
     sendResponse(buildExtensionState());
@@ -180,10 +180,10 @@ chrome.runtime.onMessage.addListener(async function (
 
 docReady(addPageEventListeners);
 
-/*
-When a node is clicked, mark it as selected
-and broadcast the selection data to the side panel
-*/
+/**
+ * When a node is clicked, mark it as selected
+ * and broadcast the selection data to the side panel.
+ */
 function selectNodeOnClick(e: MouseEvent) {
   if (!extensionIsActive) return;
   e.preventDefault();
@@ -194,10 +194,10 @@ function selectNodeOnClick(e: MouseEvent) {
   return false;
 }
 
-/*
-If this page was hidden (in an inactive tab) and becomes visible again,
-send the extension state to the side panel
-*/
+/**
+ * If this page was hidden (in an inactive tab) and becomes visible again,
+ * send the extension state to the side panel.
+ */
 function syncWithSidePanelOnVisibilityChange() {
   if (!document.hidden) {
     syncWithSidePanel();
