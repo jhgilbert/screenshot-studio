@@ -8,28 +8,31 @@ reloadOnUpdate("pages/background");
  */
 reloadOnUpdate("pages/content/style.scss");
 
-chrome.sidePanel
-  .setPanelBehavior({ openPanelOnActionClick: true })
-  .then(() => console.log("background loaded"));
+chrome.sidePanel.setOptions({
+  enabled: false,
+});
 
-chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
-  if (!tab.url) return;
-  const url = new URL(tab.url);
-  const chromeRegex = /chrome:\/\/.*/;
-  // if the url contains the string "chrome", close the side panel
-  if (url.href.match(chromeRegex)) {
-    await chrome.sidePanel.setOptions({
-      tabId,
-      enabled: false,
+chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
+
+// Only enable the side panel on supported tabs
+chrome.tabs.onActivated.addListener(async (activeInfo) => {
+  const activeTabId = activeInfo.tabId;
+  if (!activeTabId) return;
+  chrome.tabs
+    .sendMessage(activeTabId, { type: "confirm-sidepanel-support" })
+    .then((response) => {
+      if (response.sidePanelIsSupported) {
+        chrome.sidePanel.setOptions({ enabled: true });
+      }
+    })
+    .catch(async (e) => {
+      await chrome.sidePanel.setOptions({ enabled: false });
     });
-  }
-  console.log(url);
 });
 
 chrome.runtime.onConnect.addListener(function (port) {
   if (port.name === "sidepanel") {
     port.onDisconnect.addListener(async () => {
-      console.log("sidepanel closed.");
       chrome.tabs.query({}, function (tabs) {
         var message = { type: "sidepanel-closed" };
         for (var i = 0; i < tabs.length; ++i) {
@@ -39,5 +42,16 @@ chrome.runtime.onConnect.addListener(function (port) {
         }
       });
     });
+  }
+});
+
+chrome.runtime.onMessage.addListener(async function (
+  message: { type: string; payload?: any },
+  sender,
+  sendResponse
+) {
+  if (message.type === "enable-sidepanel") {
+    await chrome.sidePanel.setOptions({ enabled: true });
+    return;
   }
 });

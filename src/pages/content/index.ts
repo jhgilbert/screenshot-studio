@@ -16,6 +16,12 @@ import {
 
 let extensionIsActive: boolean = false;
 
+// send a message to enable the sidepanel,
+// then set the sidepanel state for this tab
+chrome.runtime.sendMessage({ type: "enable-sidepanel" }).then(() => {
+  syncWithSidePanel();
+});
+
 async function deactivateExtension() {
   extensionIsActive = false;
   selectNone(document);
@@ -48,8 +54,6 @@ function buildExtensionState(): ExtensionState {
     selectedNodeAttrs,
   };
 }
-
-syncWithSidePanel();
 
 async function broadcastSelectionData(selectedNode: HTMLElement | null) {
   if (!selectedNode) {
@@ -92,6 +96,9 @@ chrome.runtime.onMessage.addListener(async function (
   if (message.type === "sidepanel-closed") {
     console.log("sidepanel-closed message received from side panel");
     deactivateExtension();
+    return;
+  } else if (message.type === "confirm-sidepanel-support") {
+    sendResponse({ sidepanelIsSupported: true });
     return;
   }
 
