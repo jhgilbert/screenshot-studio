@@ -49,6 +49,8 @@ export function addLabel(node: HTMLElement) {
     borderTopRightRadius: "5px",
     boxSizing: "content-box",
     zIndex: "10000",
+    textAlign: "center",
+    textTransform: "none",
   };
   Object.assign(label.style, labelStyle);
   node.append(label);
