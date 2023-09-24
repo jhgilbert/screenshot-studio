@@ -13,15 +13,17 @@ import {
   selectNone,
   getSelectedNode,
 } from "./nodeOperations/select";
+import { docReady } from "./pageOperations/docReady";
 
 let extensionIsActive: boolean = false;
+let pageEventListenersAdded = false;
 
-// send a message to enable the sidepanel,
-// then set the sidepanel state for this tab
-console.log("enabling sidepanel");
+/**
+ * Ensure that the side panel is enabled,
+ * then send the extension state to the side panel.
+ */
 chrome.runtime.sendMessage({ type: "enable-sidepanel" }).then(() => {
   syncWithSidePanel();
-  console.log("sidepanel synced");
 });
 
 async function deactivateExtension() {
@@ -32,7 +34,6 @@ async function deactivateExtension() {
 }
 
 async function syncWithSidePanel() {
-  console.log("syncing with side panel");
   await chrome.runtime
     .sendMessage({
       type: "set-extension-is-active",
@@ -95,24 +96,23 @@ chrome.runtime.onMessage.addListener(async function (
   sender,
   sendResponse
 ) {
-  // deactivate the extension on every page when the side panel closes
+  // Deactivate the extension on every page when the side panel closes
   if (message.type === "sidepanel-closed") {
-    console.log("sidepanel-closed message received from side panel");
     deactivateExtension();
     return;
   } else if (message.type === "confirm-sidepanel-support") {
-    sendResponse({ sidepanelIsSupported: true });
+    sendResponse({ sidePanelIsSupported: true });
     return;
   }
 
-  // if this is not the active tab, do nothing,
-  // because the user is not interacting with this page
+  // If this is not the active tab, do nothing,
+  // because the user is interacting with a different page,
+  // not this one
   if (document.visibilityState === "hidden") {
-    console.log("Message received, but page is hidden:", message);
     return;
   }
 
-  // handle page operations
+  // Handle page operations requested by the side panel
   if (message.type === "obscure-pii") {
     obscurePii(document);
   } else if (message.type === "set-extension-is-active") {
@@ -127,7 +127,7 @@ chrome.runtime.onMessage.addListener(async function (
     }
   }
 
-  // handle node operations
+  // Handle node operations requested by the side panel
   const selectedNode = getSelectedNode(document);
   if (!selectedNode) {
     sendResponse(buildExtensionState());
@@ -175,28 +175,15 @@ chrome.runtime.onMessage.addListener(async function (
   }
 
   const extensionState = buildExtensionState();
-  console.log("Sending extension state:", extensionState);
-
   sendResponse(extensionState);
 });
 
-function docReady(fn: () => any) {
-  // see if DOM is already available
-  if (
-    document.readyState === "complete" ||
-    document.readyState === "interactive"
-  ) {
-    // call on next available tick
-    setTimeout(fn, 1);
-  } else {
-    document.addEventListener("DOMContentLoaded", fn);
-  }
-}
-
 docReady(addPageEventListeners);
 
-let pageEventListenersAdded = false;
-
+/**
+ * When a node is clicked, mark it as selected
+ * and broadcast the selection data to the side panel.
+ */
 function selectNodeOnClick(e: MouseEvent) {
   if (!extensionIsActive) return;
   e.preventDefault();
@@ -207,18 +194,18 @@ function selectNodeOnClick(e: MouseEvent) {
   return false;
 }
 
+/**
+ * If this page was hidden (in an inactive tab) and becomes visible again,
+ * send the extension state to the side panel.
+ */
 function syncWithSidePanelOnVisibilityChange() {
   if (!document.hidden) {
-    console.log("This page is visible");
     syncWithSidePanel();
-  } else {
-    console.log("This page is hidden");
   }
 }
 
 function removePageEventListeners() {
   if (!pageEventListenersAdded) return;
-  console.log("Removing event listeners");
   document.removeEventListener("click", selectNodeOnClick);
   document.removeEventListener(
     "visibilitychange",
@@ -229,7 +216,6 @@ function removePageEventListeners() {
 
 function addPageEventListeners() {
   if (pageEventListenersAdded) return;
-  console.log("Adding event listeners");
   document.addEventListener("click", selectNodeOnClick);
   document.addEventListener(
     "visibilitychange",
@@ -237,27 +223,3 @@ function addPageEventListeners() {
   );
   pageEventListenersAdded = true;
 }
-
-chrome.runtime.onMessage.addListener(async function (
-  message,
-  sender,
-  sendResponse
-) {
-  // listen for messages sent from background.js
-  if (message.type === "tab-updated") {
-    console.log("tab-updated message received from background worker"); // new url is now in content scripts!
-  } else if (message.type === "set-active-tab-id") {
-    console.log(
-      "set-active-tab-id message received from background worker",
-      message
-    );
-  }
-});
-
-/**
- * @description
- * Chrome extensions don't support modules in content scripts.
- */
-// import("./components/Demo");
-
-console.log("content loaded");

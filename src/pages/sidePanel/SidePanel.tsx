@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import "@pages/panel/Panel.css";
 import Switch from "@mui/material/Switch";
 import Button from "@mui/material/Button";
 import { SelectedNodeAttrs, ExtensionState } from "../../definitions";

@@ -1,4 +1,3 @@
-import "@pages/panel/Panel.css";
 import Button from "@mui/material/Button";
 import BlurOnIcon from "@mui/icons-material/BlurOn";
 import DeblurIcon from "@mui/icons-material/Deblur";
