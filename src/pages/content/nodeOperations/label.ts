@@ -35,11 +35,12 @@ export function addLabel(node: HTMLElement) {
   const rect = node.getBoundingClientRect();
   const labelStyle = {
     top: `${rect.top - 20 - nodeTopPadding}px`,
-    height: "30px",
+    height: "20px",
     left: `${rect.left + 5}px`,
     backgroundColor: "hotpink",
     lineHeight: "20px",
     color: "white",
+    letterSpacing: "0.4",
     paddingLeft: "10px",
     paddingRight: "10px",
     paddingTop: "5px",
