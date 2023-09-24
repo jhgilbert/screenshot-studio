@@ -11,6 +11,8 @@ const SidePanel: React.FC = () => {
   const [nodeIsSelected, setNodeIsSelected] = useState<boolean>(false);
   const [extensionIsActive, setExtensionIsActive] = useState<boolean>(false);
 
+  chrome.runtime.connect({ name: "sidepanel" });
+
   const sendMessage = async (message: { type: string; payload?: any }) => {
     console.log("Attempting to send message from side panel:", message);
     const [tab] = await chrome.tabs.query({

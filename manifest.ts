@@ -8,7 +8,7 @@ const manifest: chrome.runtime.ManifestV3 = {
   name: "Screenshot Studio",
   version: packageJson.version,
   description: packageJson.description,
-  permissions: ["storage", "sidePanel", "tabs", "scripting"],
+  permissions: ["sidePanel"],
   options_page: "src/pages/options/index.html",
   side_panel: {
     default_path: "src/pages/sidePanel/index.html",

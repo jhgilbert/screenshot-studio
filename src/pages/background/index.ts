@@ -25,3 +25,19 @@ chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
   }
   console.log(url);
 });
+
+chrome.runtime.onConnect.addListener(function (port) {
+  if (port.name === "sidepanel") {
+    port.onDisconnect.addListener(async () => {
+      console.log("sidepanel closed.");
+      chrome.tabs.query({}, function (tabs) {
+        var message = { type: "sidepanel-closed" };
+        for (var i = 0; i < tabs.length; ++i) {
+          chrome.tabs.sendMessage(tabs[i].id as number, message).catch((e) => {
+            console.log(e);
+          });
+        }
+      });
+    });
+  }
+});

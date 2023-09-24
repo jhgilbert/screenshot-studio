@@ -16,6 +16,12 @@ import {
 
 let extensionIsActive: boolean = false;
 
+async function deactivateExtension() {
+  extensionIsActive = false;
+  selectNone(document);
+  removePageEventListeners();
+}
+
 async function syncWithSidePanel() {
   console.log("syncing with side panel");
   await chrome.runtime
@@ -82,6 +88,13 @@ chrome.runtime.onMessage.addListener(async function (
   sender,
   sendResponse
 ) {
+  // deactivate the extension on every page when the side panel closes
+  if (message.type === "sidepanel-closed") {
+    console.log("sidepanel-closed message received from side panel");
+    deactivateExtension();
+    return;
+  }
+
   // if this is not the active tab, do nothing,
   // because the user is not interacting with this page
   if (document.visibilityState === "hidden") {
@@ -97,6 +110,7 @@ chrome.runtime.onMessage.addListener(async function (
     if (!extensionIsActive) {
       selectNone(document);
       document.body.contentEditable = "false";
+      removePageEventListeners();
     } else {
       document.body.contentEditable = "true";
       addPageEventListeners();
@@ -165,29 +179,43 @@ docReady(addPageEventListeners);
 
 let pageEventListenersAdded = false;
 
+function selectNodeOnClick(e: MouseEvent) {
+  if (!extensionIsActive) return;
+  e.preventDefault();
+  e.stopImmediatePropagation();
+  const node = e.target as HTMLElement;
+  selectNode({ document, node });
+  broadcastSelectionData(node);
+  return false;
+}
+
+function syncWithSidePanelOnVisibilityChange() {
+  if (!document.hidden) {
+    console.log("This page is visible");
+    syncWithSidePanel();
+  } else {
+    console.log("This page is hidden");
+  }
+}
+
+function removePageEventListeners() {
+  if (!pageEventListenersAdded) return;
+  console.log("Removing event listeners");
+  document.removeEventListener("click", selectNodeOnClick);
+  document.removeEventListener(
+    "visibilitychange",
+    syncWithSidePanelOnVisibilityChange
+  );
+  pageEventListenersAdded = false;
+}
+
 function addPageEventListeners() {
   if (pageEventListenersAdded) return;
   console.log("Adding event listeners");
-  document.addEventListener("click", function (e: MouseEvent) {
-    if (!extensionIsActive) return;
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    const node = e.target as HTMLElement;
-    selectNode({ document, node });
-    broadcastSelectionData(node);
-    return false;
-  });
+  document.addEventListener("click", selectNodeOnClick);
   document.addEventListener(
     "visibilitychange",
-    async function () {
-      if (!document.hidden) {
-        console.log("This page is visible");
-        await syncWithSidePanel();
-      } else {
-        console.log("This page is hidden");
-      }
-    },
-    false
+    syncWithSidePanelOnVisibilityChange
   );
   pageEventListenersAdded = true;
 }
