@@ -18,10 +18,8 @@ let extensionIsActive: boolean = false;
 
 // send a message to enable the sidepanel,
 // then set the sidepanel state for this tab
-console.log("enabling sidepanel");
 chrome.runtime.sendMessage({ type: "enable-sidepanel" }).then(() => {
   syncWithSidePanel();
-  console.log("sidepanel synced");
 });
 
 async function deactivateExtension() {
@@ -32,7 +30,6 @@ async function deactivateExtension() {
 }
 
 async function syncWithSidePanel() {
-  console.log("syncing with side panel");
   await chrome.runtime
     .sendMessage({
       type: "set-extension-is-active",
@@ -97,7 +94,6 @@ chrome.runtime.onMessage.addListener(async function (
 ) {
   // deactivate the extension on every page when the side panel closes
   if (message.type === "sidepanel-closed") {
-    console.log("sidepanel-closed message received from side panel");
     deactivateExtension();
     return;
   } else if (message.type === "confirm-sidepanel-support") {
@@ -108,7 +104,6 @@ chrome.runtime.onMessage.addListener(async function (
   // if this is not the active tab, do nothing,
   // because the user is not interacting with this page
   if (document.visibilityState === "hidden") {
-    console.log("Message received, but page is hidden:", message);
     return;
   }
 
@@ -175,8 +170,6 @@ chrome.runtime.onMessage.addListener(async function (
   }
 
   const extensionState = buildExtensionState();
-  console.log("Sending extension state:", extensionState);
-
   sendResponse(extensionState);
 });
 
@@ -209,16 +202,12 @@ function selectNodeOnClick(e: MouseEvent) {
 
 function syncWithSidePanelOnVisibilityChange() {
   if (!document.hidden) {
-    console.log("This page is visible");
     syncWithSidePanel();
-  } else {
-    console.log("This page is hidden");
   }
 }
 
 function removePageEventListeners() {
   if (!pageEventListenersAdded) return;
-  console.log("Removing event listeners");
   document.removeEventListener("click", selectNodeOnClick);
   document.removeEventListener(
     "visibilitychange",
@@ -229,7 +218,6 @@ function removePageEventListeners() {
 
 function addPageEventListeners() {
   if (pageEventListenersAdded) return;
-  console.log("Adding event listeners");
   document.addEventListener("click", selectNodeOnClick);
   document.addEventListener(
     "visibilitychange",

@@ -48,7 +48,6 @@ chrome.runtime.onMessage.addListener(async function (
   sendResponse
 ) {
   if (message.type === "enable-sidepanel") {
-    console.log("enabling side panel");
     await chrome.sidePanel.setOptions({ enabled: true });
     return;
   }
