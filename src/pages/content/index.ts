@@ -174,6 +174,7 @@ function addPageEventListeners() {
     e.stopImmediatePropagation();
     const node = e.target as HTMLElement;
     selectNode({ document, node });
+    broadcastSelectionData(node);
     return false;
   });
   document.addEventListener(
