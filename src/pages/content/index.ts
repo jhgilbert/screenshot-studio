@@ -101,7 +101,7 @@ chrome.runtime.onMessage.addListener(async function (
     deactivateExtension();
     return;
   } else if (message.type === "confirm-sidepanel-support") {
-    sendResponse({ sidepanelIsSupported: true });
+    sendResponse({ sidePanelIsSupported: true });
     return;
   }
 
