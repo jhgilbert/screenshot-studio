@@ -30,7 +30,6 @@ async function deactivateExtension() {
   extensionIsActive = false;
   selectNone(document);
   broadcastSelectionData(null);
-  removePageEventListeners();
 }
 
 async function syncWithSidePanel() {

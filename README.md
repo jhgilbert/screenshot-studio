@@ -2,6 +2,8 @@
 
 This Chrome extension is a toolkit for taking polished screenshots. Use it to edit a web page before screenshotting it.
 
+![image](screenshot-studio.png)
+
 ## Features
 
 In addition to making the text on the page editable, Screenshot Studio offers the following features:
