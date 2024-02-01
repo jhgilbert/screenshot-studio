@@ -2,6 +2,8 @@
 
 This Chrome extension is a toolkit for taking polished screenshots. Use it to edit a web page before screenshotting it.
 
+**NOTE:** This is just a demo I built to pitch the project at Datadog. This version of the extension has limited functionality/performance and quite a few missing pieces, but it will work reasonably well if you build and install it locally and just use it on the included test site in a new tab. A copy of this codebase eventually became Pawparazzi, an internal screenshotting tool at Datadog.
+
 ![image](screenshot-studio.png)
 
 ## Features
